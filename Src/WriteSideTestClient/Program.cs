@@ -11,7 +11,7 @@ namespace WriteSideTestClient
 {
     class Program
     {
-        static async Task Main(string[] args)
+        static void Main(string[] args)
         {
             try
             {
@@ -37,9 +37,9 @@ namespace WriteSideTestClient
 
                 using (var connection = EventStoreConnection.Create("ConnectTo=tcp://admin:changeit@127.0.0.1:1113; HeartBeatTimeout=5000", connectionSettings))
                 {
-                    await connection.ConnectAsync();
+                    connection.ConnectAsync().GetAwaiter().GetResult();
 
-                    await connection.AppendToStreamAsync(
+                    connection.AppendToStreamAsync(
                         stream,
                         ExpectedVersion.Any,
                         events.Select(@event => new EventData(
@@ -47,7 +47,7 @@ namespace WriteSideTestClient
                             @event.GetType().FullName,
                             true,
                             Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(@event)),
-                            new byte[0])).ToArray());
+                            new byte[0])).ToArray()).GetAwaiter().GetResult();
                 }
             }
             catch (Exception e)

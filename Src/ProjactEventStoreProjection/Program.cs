@@ -13,7 +13,7 @@ namespace ProjactEventStoreProjection
 {
     class Program
     {
-        static async Task Main(string[] args)
+        static void Main(string[] args)
         {
             var credentials = new UserCredentials("admin", "changeit");
 
@@ -28,7 +28,7 @@ namespace ProjactEventStoreProjection
 
             using (var connection = EventStoreConnection.Create("ConnectTo=tcp://admin:changeit@127.0.0.1:1113; HeartBeatTimeout=5000", connectionSettings))
             {
-                await connection.ConnectAsync();
+                connection.ConnectAsync().GetAwaiter().GetResult();
 
                 var projector = new SqlProjector(
                     Resolve.WhenEqualToHandlerMessageType(new PortfolioProjection()),
