@@ -17,9 +17,10 @@ namespace WriteSideTestClient
             {
                 var credentials = new UserCredentials("admin", "changeit");
 
-                var portfolioId = Guid.Parse("474f7597-3c81-4993-a331-ec3c04f96e44");
+                var portfolioId = Guid.Parse("84cd61d6-ed42-4276-914d-a20de7a8c90f");
                 var events = new object[]
                 {
+                    new PortfolioRemoved {Id = portfolioId}, //only because Start from 0 doesn't work on CatchUpSubscribtion.
                     new PortfolioAdded {Id = portfolioId, Name = "My Portfolio"},
                     new PortfolioRenamed {Id = portfolioId, Name = "Your Portfolio"},
                     //new PortfolioRemoved {Id = portfolioId}

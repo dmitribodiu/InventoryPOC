@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Data;
 using Projac.Sql;
 using Projac.Sql.Executors;
@@ -17,6 +18,15 @@ namespace ProjactEventStoreProjection
     {
         static void Main(string[] args)
         {
+            var projector = new SqlProjector(
+                Resolve.WhenEqualToHandlerMessageType(new PortfolioProjection()),
+                new TransactionalSqlCommandExecutor(
+                    SqlClientFactory.Instance,
+                    @"Data Source=localhost;Initial Catalog=ProjacUsage;Integrated Security=SSPI;",
+                    IsolationLevel.ReadCommitted));
+
+            projector.Project(new List<object> { new DeleteData() });
+
             var credentials = new UserCredentials("admin", "changeit");
 
             var connectionSettings = ConnectionSettings.Create()
@@ -32,14 +42,7 @@ namespace ProjactEventStoreProjection
             {
                 connection.ConnectAsync().GetAwaiter().GetResult();
 
-                var projector = new SqlProjector(
-                    Resolve.WhenEqualToHandlerMessageType(new PortfolioProjection()),
-                    new TransactionalSqlCommandExecutor(
-                        SqlClientFactory.Instance,
-                        @"Data Source=localhost;Initial Catalog=ProjacUsage;Integrated Security=SSPI;",
-                        IsolationLevel.ReadCommitted));
-
-                var subscription = connection.SubscribeToStreamFrom("portfolio-474f75973c814993a331ec3c04f96e44", StreamPosition.Start, CatchUpSubscriptionSettings.Default, (_, @event) =>
+                var subscription = connection.SubscribeToStreamFrom("portfolio-84cd61d6ed424276914da20de7a8c90f", StreamPosition.Start, CatchUpSubscriptionSettings.Default, (_, @event) =>
                 {
                     projector.Project(
                         JsonConvert.DeserializeObject(
