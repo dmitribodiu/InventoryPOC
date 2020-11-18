@@ -26,7 +26,7 @@ namespace ProjactEventStoreProjection
                     IsolationLevel.ReadCommitted));
 
             projector.Project(new List<object> { new DeleteData() });
-
+            
             var credentials = new UserCredentials("admin", "changeit");
 
             var connectionSettings = ConnectionSettings.Create()
@@ -55,11 +55,6 @@ namespace ProjactEventStoreProjection
             }
 
             
-        }
-
-        private static Assembly AssemblyResolver(AssemblyName arg)
-        {
-            throw new NotImplementedException();
         }
     }
 }
