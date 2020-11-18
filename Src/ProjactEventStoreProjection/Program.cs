@@ -3,8 +3,10 @@ using System.Data;
 using Projac.Sql;
 using Projac.Sql.Executors;
 using System.Data.SqlClient;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using Events;
 using EventStore.ClientAPI;
 using EventStore.ClientAPI.SystemData;
 using Newtonsoft.Json;
@@ -42,7 +44,7 @@ namespace ProjactEventStoreProjection
                     projector.Project(
                         JsonConvert.DeserializeObject(
                             Encoding.UTF8.GetString(@event.Event.Data),
-                            Type.GetType(@event.Event.EventType, true)));
+                            Assembly.GetAssembly(typeof(PortfolioRenamed)).GetType(@event.Event.EventType)));
                 }, userCredentials: credentials);
 
                 var a = subscription.LastProcessedEventNumber;
@@ -50,6 +52,11 @@ namespace ProjactEventStoreProjection
             }
 
             
+        }
+
+        private static Assembly AssemblyResolver(AssemblyName arg)
+        {
+            throw new NotImplementedException();
         }
     }
 }

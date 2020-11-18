@@ -22,7 +22,7 @@ namespace WriteSideTestClient
                 {
                     new PortfolioAdded {Id = portfolioId, Name = "My Portfolio"},
                     new PortfolioRenamed {Id = portfolioId, Name = "Your Portfolio"},
-                    new PortfolioRemoved {Id = portfolioId}
+                    //new PortfolioRemoved {Id = portfolioId}
                 };
                 var stream = string.Format("portfolio-{0}", portfolioId.ToString("N"));
 
