@@ -1,11 +1,8 @@
 ﻿using System;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
-using Events;
 using Events.Inventory;
 using EventStore.ClientAPI;
-using EventStore.ClientAPI.SystemData;
 using Newtonsoft.Json;
 
 namespace WriteSideTestClient
@@ -61,17 +58,20 @@ namespace WriteSideTestClient
 
                 var goodsUnloadedEntryId = Guid.NewGuid();
                 var goodsUnloadedEntryPostDate = DateTimeOffset.UtcNow;
+                Guid locationId = Guid.NewGuid();
 
                 var goodsUnloaded = new PostGeneralLedgerEntry
                 {
                     CreatedOn = DateTimeOffset.UtcNow,
-                    PostDate = deliveryScheduledEntryPostDate,
-                    GeneralLedgerEntryId = deliveryScheduledEntryId,
+                    PostDate = goodsUnloadedEntryPostDate,
+                    GeneralLedgerEntryId = goodsUnloadedEntryId,
                     BusinessTransaction = new GoodsUnloadedTransaction
                     {
                         ReferenceNumber = 1,
                         CustomerId = customerId,
                         InboundDeliveryId = inboundDeliveryId,
+                        LocationId = locationId,
+                        WorkOrderId = Guid.NewGuid(),
                         SkuId = skuId,
                         Amount = 20
                     }
@@ -80,10 +80,10 @@ namespace WriteSideTestClient
                 // Should be translated into:
                 var goodsUnloadedEvents = new object[]
                 {
-                    new CreditApplied { Account = $"C|{customerId}", GeneralLedgerEntryId = deliveryScheduledEntryId, Amount = 20, SkuId = skuId },
-                    new DebitApplied { Account = $"C|{customerId}:ID|{inboundDeliveryId}", GeneralLedgerEntryId = deliveryScheduledEntryId, Amount = 20, SkuId = skuId },
-                    deliveryScheduled.BusinessTransaction.GetAdditionalChanges(),
-                    new GeneralLedgerEntryPosted { GeneralLedgerEntryId = deliveryScheduledEntryId, PostDate = deliveryScheduledEntryPostDate }
+                    new CreditApplied { Account = $"C|{customerId}:ID|{inboundDeliveryId}", GeneralLedgerEntryId = goodsUnloadedEntryId, Amount = 20, SkuId = skuId },
+                    new DebitApplied { Account = $"C|{customerId}:WL|{locationId}", GeneralLedgerEntryId = goodsUnloadedEntryId, Amount = 20, SkuId = skuId },
+                    goodsUnloaded.BusinessTransaction.GetAdditionalChanges(),
+                    new GeneralLedgerEntryPosted { GeneralLedgerEntryId = goodsUnloadedEntryId, PostDate = goodsUnloadedEntryPostDate }
                 };
 
                 var connectionSettings = ConnectionSettings.Create()
@@ -99,10 +99,22 @@ namespace WriteSideTestClient
                 {
                     connection.ConnectAsync().GetAwaiter().GetResult();
 
+                    //DeliveryScheduled
                     connection.AppendToStreamAsync(
                         $"ledgerEntry-{deliveryScheduledEntryId}",
                         ExpectedVersion.Any,
                         deliveryScheduledEvents.Select(@event => new EventData(
+                            Guid.NewGuid(),
+                            @event.GetType().FullName,
+                            true,
+                            Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(@event)),
+                            new byte[0])).ToArray()).GetAwaiter().GetResult();
+
+                    //GoodsUnloaded
+                    connection.AppendToStreamAsync(
+                        $"ledgerEntry-{goodsUnloadedEntryId}",
+                        ExpectedVersion.Any,
+                        goodsUnloadedEvents.Select(@event => new EventData(
                             Guid.NewGuid(),
                             @event.GetType().FullName,
                             true,

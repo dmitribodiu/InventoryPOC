@@ -77,6 +77,7 @@ namespace WriteSideTestClient
         public Guid WorkOrderId { get; set; }
         public Guid SkuId { get; set; }
         public int Amount { get; set; }
+        public Guid LocationId { get; set; }
 
         public IEnumerable<object> GetAdditionalChanges()
         {
@@ -87,7 +88,8 @@ namespace WriteSideTestClient
                 SkuId = SkuId,
                 CustomerId = CustomerId,
                 InboundDeliveryId = InboundDeliveryId,
-                WorkOrderId = WorkOrderId
+                WorkOrderId = WorkOrderId,
+                LocationId = LocationId
             };
         }
     }

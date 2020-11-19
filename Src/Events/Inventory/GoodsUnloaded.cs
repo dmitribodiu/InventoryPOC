@@ -10,5 +10,6 @@ namespace Events.Inventory
         public Guid CustomerId { get; set; }
         public Guid InboundDeliveryId { get; set; }
         public Guid WorkOrderId { get; set; }
+        public Guid LocationId { get; set; }
     }
 }
