@@ -3,6 +3,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Events;
+using Events.Inventory;
 using EventStore.ClientAPI;
 using EventStore.ClientAPI.SystemData;
 using Newtonsoft.Json;
@@ -15,16 +16,52 @@ namespace WriteSideTestClient
         {
             try
             {
+                // DeliveryScheduled, GoodsArrivedOnSite, GoodsUnloaded, GoodsReserved, GoodsLoaded, GoodsLeftSite, GoodsShifted.
+                // accounts: 
+
+
+                //PostGeneralLedgerEntry:
+                //{ id = guid,
+                //  PostDAte: Now,
+                //  CreatedOn: Yesterday,
+                //  BusinessTransaction: { ReferenceNumber: 'deliveryScheduled-DeliveryId', InboundDeliveryId: guid, SkuId: A, SkuAmount: 20  } }
+
+                // Transaction:
+                var entryId = Guid.NewGuid();
+                var entryPostDate = DateTimeOffset.UtcNow;
+                var customerId = Guid.NewGuid();
+                var inboundDeliveryId = Guid.NewGuid();
+                var skuId = Guid.NewGuid();
+
+                var deliveryScheduled = new PostGeneralLedgerEntry
+                {
+                    CreatedOn = DateTimeOffset.UtcNow,
+                    PostDate = entryPostDate,
+                    GeneralLedgerEntryId = entryId,
+                    BusinessTransaction = new DeliveryScheduledTransaction
+                    {
+                        ReferenceNumber = 1,
+                        CustomerId = customerId,
+                        InboundDeliveryId = inboundDeliveryId,
+                        SkuId = skuId,
+                        Amount = 20
+                    }
+                };
+
+                // Should be translated into:
+                var deliveryScheduledEvents = new object[]
+                {
+                    new CreditApplied { Account = $"C-{customerId}", GeneralLedgerEntryId = entryId, Amount = 20, SkuId = skuId },
+                    new DebitApplied { Account = $"C-{customerId}:ID-{inboundDeliveryId}", GeneralLedgerEntryId = entryId, Amount = 20, SkuId = skuId },
+                    deliveryScheduled.BusinessTransaction.GetAdditionalChanges(),
+                    new GeneralLedgerEntryPosted { GeneralLedgerEntryId = entryId, PostDate = entryPostDate }
+                };
+
+
                 var credentials = new UserCredentials("admin", "changeit");
 
                 var portfolioId = Guid.Parse("84cd61d6-ed42-4276-914d-a20de7a8c90f");
-                var events = new object[]
-                {
-                    new PortfolioRemoved {Id = portfolioId}, //only because Start from 0 doesn't work on CatchUpSubscribtion.
-                    new PortfolioAdded {Id = portfolioId, Name = "My Portfolio"},
-                    new PortfolioRenamed {Id = portfolioId, Name = "Your Portfolio"},
-                    //new PortfolioRemoved {Id = portfolioId}
-                };
+                
                 var stream = string.Format("portfolio-{0}", portfolioId.ToString("N"));
 
                 var connectionSettings = ConnectionSettings.Create()
@@ -43,7 +80,7 @@ namespace WriteSideTestClient
                     connection.AppendToStreamAsync(
                         stream,
                         ExpectedVersion.Any,
-                        events.Select(@event => new EventData(
+                        deliveryScheduledEvents.Select(@event => new EventData(
                             Guid.NewGuid(),
                             @event.GetType().FullName,
                             true,
