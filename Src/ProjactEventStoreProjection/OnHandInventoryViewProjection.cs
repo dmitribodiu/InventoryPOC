@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
 using Events;
 using Events.Inventory;
 using Projac.Sql;
@@ -38,30 +39,28 @@ namespace ProjactEventStoreProjection
                         DELETE FROM [OnHandInventoryView]"));
         }
 
-        private SqlNonQueryCommand GeneralLedgerEntryPostedHandler(GeneralLedgerEntryPosted @event)
+        private IEnumerable<SqlNonQueryCommand> GeneralLedgerEntryPostedHandler(GeneralLedgerEntryPosted @event)
         {
-            return null;
+            return Sql.NonQueryStatementIf(false, "");
         }
 
-        private SqlNonQueryCommand DeliveryScheduledHandler(DeliveryScheduled @event)
+        private IEnumerable<SqlNonQueryCommand> DeliveryScheduledHandler(DeliveryScheduled @event)
         {
-            return null;
+            return Sql.NonQueryStatementIf(false, "");
         }
 
-        private SqlNonQueryCommand CreditAppliedHandler(CreditApplied @event)
+        private IEnumerable<SqlNonQueryCommand> CreditAppliedHandler(CreditApplied @event)
         {
-            return null;
+            return Sql.NonQueryStatementIf(false, "");
         }
 
-        private SqlNonQueryCommand DebitAppliedHandler(DebitApplied @event)
+        private IEnumerable<SqlNonQueryCommand> DebitAppliedHandler(DebitApplied @event)
         {
             var lastAccount = @event.Account.Split(":").Last();
-            var lastAccountPrefix = lastAccount.Split("-").First();
-            var lastAccountId = lastAccount.Split("-").Last();
+            var lastAccountPrefix = lastAccount.Split("|").First();
+            var lastAccountId = lastAccount.Split("|").Last();
 
-            if (lastAccountPrefix != "WL") return null;
-
-            return Sql.NonQueryStatement(
+            return Sql.NonQueryStatementIf(lastAccountPrefix == "WL",
                 @"declare @Amount int = (select top 1 Amount FROM [OnHandInventoryView] where skuId = @SkuId and IsReserved = 0 and location = @Location)
                             IF(@Amount IS NULL) 
 	                            INSERT INTO [OnHandInventoryView] ([Location],[Amount],[SkuId],[IsReserved]) VALUES (@Location, @AmountToAppend, @SkuId, 0)

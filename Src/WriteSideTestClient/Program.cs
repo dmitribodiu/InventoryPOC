@@ -27,8 +27,8 @@ namespace WriteSideTestClient
                 //  BusinessTransaction: { ReferenceNumber: 'deliveryScheduled-DeliveryId', InboundDeliveryId: guid, SkuId: A, SkuAmount: 20  } }
 
                 // Transaction:
-                var entryId = Guid.NewGuid();
-                var entryPostDate = DateTimeOffset.UtcNow;
+                var deliveryScheduledEntryId = Guid.NewGuid();
+                var deliveryScheduledEntryPostDate = DateTimeOffset.UtcNow;
                 var customerId = Guid.NewGuid();
                 var inboundDeliveryId = Guid.NewGuid();
                 var skuId = Guid.NewGuid();
@@ -36,8 +36,8 @@ namespace WriteSideTestClient
                 var deliveryScheduled = new PostGeneralLedgerEntry
                 {
                     CreatedOn = DateTimeOffset.UtcNow,
-                    PostDate = entryPostDate,
-                    GeneralLedgerEntryId = entryId,
+                    PostDate = deliveryScheduledEntryPostDate,
+                    GeneralLedgerEntryId = deliveryScheduledEntryId,
                     BusinessTransaction = new DeliveryScheduledTransaction
                     {
                         ReferenceNumber = 1,
@@ -51,10 +51,39 @@ namespace WriteSideTestClient
                 // Should be translated into:
                 var deliveryScheduledEvents = new object[]
                 {
-                    new CreditApplied { Account = $"C-{customerId}", GeneralLedgerEntryId = entryId, Amount = 20, SkuId = skuId },
-                    new DebitApplied { Account = $"C-{customerId}:ID-{inboundDeliveryId}", GeneralLedgerEntryId = entryId, Amount = 20, SkuId = skuId },
+                    new CreditApplied { Account = $"C|{customerId}", GeneralLedgerEntryId = deliveryScheduledEntryId, Amount = 20, SkuId = skuId },
+                    new DebitApplied { Account = $"C|{customerId}:ID|{inboundDeliveryId}", GeneralLedgerEntryId = deliveryScheduledEntryId, Amount = 20, SkuId = skuId },
                     deliveryScheduled.BusinessTransaction.GetAdditionalChanges(),
-                    new GeneralLedgerEntryPosted { GeneralLedgerEntryId = entryId, PostDate = entryPostDate }
+                    new GeneralLedgerEntryPosted { GeneralLedgerEntryId = deliveryScheduledEntryId, PostDate = deliveryScheduledEntryPostDate }
+                };
+
+                // Goods unloaded:
+
+                var goodsUnloadedEntryId = Guid.NewGuid();
+                var goodsUnloadedEntryPostDate = DateTimeOffset.UtcNow;
+
+                var goodsUnloaded = new PostGeneralLedgerEntry
+                {
+                    CreatedOn = DateTimeOffset.UtcNow,
+                    PostDate = deliveryScheduledEntryPostDate,
+                    GeneralLedgerEntryId = deliveryScheduledEntryId,
+                    BusinessTransaction = new GoodsUnloadedTransaction
+                    {
+                        ReferenceNumber = 1,
+                        CustomerId = customerId,
+                        InboundDeliveryId = inboundDeliveryId,
+                        SkuId = skuId,
+                        Amount = 20
+                    }
+                };
+
+                // Should be translated into:
+                var goodsUnloadedEvents = new object[]
+                {
+                    new CreditApplied { Account = $"C|{customerId}", GeneralLedgerEntryId = deliveryScheduledEntryId, Amount = 20, SkuId = skuId },
+                    new DebitApplied { Account = $"C|{customerId}:ID|{inboundDeliveryId}", GeneralLedgerEntryId = deliveryScheduledEntryId, Amount = 20, SkuId = skuId },
+                    deliveryScheduled.BusinessTransaction.GetAdditionalChanges(),
+                    new GeneralLedgerEntryPosted { GeneralLedgerEntryId = deliveryScheduledEntryId, PostDate = deliveryScheduledEntryPostDate }
                 };
 
                 var connectionSettings = ConnectionSettings.Create()
@@ -71,7 +100,7 @@ namespace WriteSideTestClient
                     connection.ConnectAsync().GetAwaiter().GetResult();
 
                     connection.AppendToStreamAsync(
-                        $"ledgerEntry-{entryId}",
+                        $"ledgerEntry-{deliveryScheduledEntryId}",
                         ExpectedVersion.Any,
                         deliveryScheduledEvents.Select(@event => new EventData(
                             Guid.NewGuid(),

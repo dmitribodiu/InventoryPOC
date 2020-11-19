@@ -1,10 +1,14 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace Events.Inventory
 {
-    class GoodsUnloaded
+    public class GoodsUnloaded
     {
+        public GeneralLedgerEntryNumber ReferenceNumber { get; set; }
+        public int Amount { get; set; }
+        public Guid SkuId { get; set; }
+        public Guid CustomerId { get; set; }
+        public Guid InboundDeliveryId { get; set; }
+        public Guid WorkOrderId { get; set; }
     }
 }

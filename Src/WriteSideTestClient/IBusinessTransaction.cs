@@ -40,4 +40,55 @@ namespace WriteSideTestClient
         };
         }
     }
+
+    public class GoodsArrivedOnSiteTransaction : IBusinessTransaction
+    {
+        GeneralLedgerEntryNumber IBusinessTransaction.ReferenceNumber =>
+            new GeneralLedgerEntryNumber("arrivedOnSite", ReferenceNumber);
+
+        public int ReferenceNumber { get; set; }
+        public Guid CustomerId { get; set; }
+        public Guid InboundDeliveryId { get; set; }
+        public Guid SkuId { get; set; }
+        public int Amount { get; set; }
+
+        public IEnumerable<object> GetAdditionalChanges()
+        {
+            yield return new DeliveryScheduled
+            {
+                ReferenceNumber = new GeneralLedgerEntryNumber("arrivedOnSite", ReferenceNumber),
+                Amount = Amount,
+                SkuId = SkuId,
+                CustomerId = CustomerId,
+                InboundDeliveryId = InboundDeliveryId
+
+            };
+        }
+    }
+
+    public class GoodsUnloadedTransaction : IBusinessTransaction
+    {
+        GeneralLedgerEntryNumber IBusinessTransaction.ReferenceNumber =>
+            new GeneralLedgerEntryNumber("goodsUnloaded", ReferenceNumber);
+
+        public int ReferenceNumber { get; set; }
+        public Guid CustomerId { get; set; }
+        public Guid InboundDeliveryId { get; set; }
+        public Guid WorkOrderId { get; set; }
+        public Guid SkuId { get; set; }
+        public int Amount { get; set; }
+
+        public IEnumerable<object> GetAdditionalChanges()
+        {
+            yield return new GoodsUnloaded
+            {
+                ReferenceNumber = new GeneralLedgerEntryNumber("goodsUnloaded", ReferenceNumber),
+                Amount = Amount,
+                SkuId = SkuId,
+                CustomerId = CustomerId,
+                InboundDeliveryId = InboundDeliveryId,
+                WorkOrderId = WorkOrderId
+            };
+        }
+    }
 }
