@@ -5,7 +5,7 @@ namespace Events.Inventory
 {
     public class GeneralLedgerEntryNumber
     {
-        public const int MaxPrefixLength = 5;
+        public const int MaxPrefixLength = 25;
         public string Prefix { get; }
         public int SequenceNumber { get; }
 

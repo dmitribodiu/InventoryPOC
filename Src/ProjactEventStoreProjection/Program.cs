@@ -19,13 +19,13 @@ namespace ProjactEventStoreProjection
         static void Main(string[] args)
         {
             var projector = new SqlProjector(
-                Resolve.WhenEqualToHandlerMessageType(new PortfolioProjection()),
+                Resolve.WhenEqualToHandlerMessageType(new OnHandInventoryViewProjection()),
                 new TransactionalSqlCommandExecutor(
                     SqlClientFactory.Instance,
-                    @"Data Source=localhost;Initial Catalog=ProjacUsage;Integrated Security=SSPI;",
+                    @"Data Source=localhost;Initial Catalog=InventoryPOC;Integrated Security=SSPI;",
                     IsolationLevel.ReadCommitted));
 
-            projector.Project(new List<object> { new DeleteData() });
+            projector.Project(new List<object> { new DropSchema(), new CreateSchema() });
             
             var credentials = new UserCredentials("admin", "changeit");
 
@@ -42,8 +42,9 @@ namespace ProjactEventStoreProjection
             {
                 connection.ConnectAsync().GetAwaiter().GetResult();
 
-                var subscription = connection.SubscribeToStreamFrom("portfolio-84cd61d6ed424276914da20de7a8c90f", StreamPosition.Start, CatchUpSubscriptionSettings.Default, (_, @event) =>
+                var subscription = connection.SubscribeToStreamFrom("$ce-ledgerEntry", StreamPosition.Start, CatchUpSubscriptionSettings.Default, (_, @event) =>
                 {
+
                     projector.Project(
                         JsonConvert.DeserializeObject(
                             Encoding.UTF8.GetString(@event.Event.Data),

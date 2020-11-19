@@ -57,13 +57,6 @@ namespace WriteSideTestClient
                     new GeneralLedgerEntryPosted { GeneralLedgerEntryId = entryId, PostDate = entryPostDate }
                 };
 
-
-                var credentials = new UserCredentials("admin", "changeit");
-
-                var portfolioId = Guid.Parse("84cd61d6-ed42-4276-914d-a20de7a8c90f");
-                
-                var stream = string.Format("portfolio-{0}", portfolioId.ToString("N"));
-
                 var connectionSettings = ConnectionSettings.Create()
                     .KeepReconnecting()
                     .KeepRetrying()
@@ -78,7 +71,7 @@ namespace WriteSideTestClient
                     connection.ConnectAsync().GetAwaiter().GetResult();
 
                     connection.AppendToStreamAsync(
-                        stream,
+                        $"ledgerEntry-{entryId}",
                         ExpectedVersion.Any,
                         deliveryScheduledEvents.Select(@event => new EventData(
                             Guid.NewGuid(),
