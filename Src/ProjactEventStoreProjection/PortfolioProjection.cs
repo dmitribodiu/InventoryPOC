@@ -43,15 +43,6 @@ namespace ProjactEventStoreProjection
                 Sql.NonQueryStatement(
                     @"IF EXISTS (SELECT * FROM SYSOBJECTS WHERE NAME='Portfolio' AND XTYPE='U')
                         DELETE FROM [Portfolio]"));
-
-            //When<SetCheckpoint>(_ =>
-            //    Sql.NonQueryStatement(
-            //        "UPDATE [CheckpointGate] SET Checkpoint = @Checkpoint WHERE [Id] = @Id",
-            //        new
-            //        {
-            //            Checkpoint = Sql.BigInt(_.Checkpoint),
-            //            Id = Sql.Binary(Id, 16)
-            //        }));
         }
     }
 }
