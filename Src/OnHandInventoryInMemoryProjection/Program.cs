@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Text;
+using ConsoleTables;
 using Events;
 using EventStore.ClientAPI;
 using EventStore.ClientAPI.SystemData;
@@ -35,7 +36,6 @@ namespace OnHandInventoryInMemoryProjection
 
                 var subscription = connection.SubscribeToStreamFrom("$ce-ledgerEntry", StreamPosition.Start, CatchUpSubscriptionSettings.Default, (_, @event) =>
                 {
-                    var portfolioId = Guid.NewGuid();
                     new Projector<MemoryCache>(
                             Resolve.WhenEqualToHandlerMessageType(InMemoryInventoryOverviewProjection.Projection.Handlers)).
                         ProjectAsync(cache, JsonConvert.DeserializeObject(
@@ -44,19 +44,19 @@ namespace OnHandInventoryInMemoryProjection
 
                     var field = typeof(MemoryCache).GetProperty("EntriesCollection", BindingFlags.NonPublic | BindingFlags.Instance);
                     var collection = field.GetValue(cache) as ICollection;
-                    var items = new List<StockLine>();
                     if (collection != null)
                     {
+                        var table = new ConsoleTable("SkuId", "Amount", "LocationId", "ReservationId");
                         foreach (var item in collection)
                         {
                             var methodInfo = item.GetType().GetProperty("Key");
                             var val = methodInfo.GetValue(item);
-                            var value = cache.Get(val);
-                            items.Add(value as StockLine);
+                            var value = cache.Get<StockLine>(val);
+                            table.AddRow(value.SkuId, value.Amount, value.LocationId, value.ReservationId);
                         }
+                        Console.Clear();
+                        table.Write();
                     }
-                        
-                    Console.WriteLine("Test");
 
                 }, userCredentials: credentials);
 
