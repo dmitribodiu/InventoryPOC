@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Events;
 using Events.Inventory;
@@ -27,7 +28,7 @@ namespace ProjactEventStoreProjection
                                 [Location] NVARCHAR(MAX) NOT NULL,
                                 [Amount] INT NOT NULL,
                                 [SkuId] uniqueidentifier,
-                                [IsReserved] BIT NOT NULL)
+                                [ReservationId] uniqueidentifier)
                         END"));
             When<DropSchema>(_ =>
                 Sql.NonQueryStatement(
@@ -56,21 +57,60 @@ namespace ProjactEventStoreProjection
 
         private IEnumerable<SqlNonQueryCommand> DebitAppliedHandler(DebitApplied @event)
         {
+            var result = new List<SqlNonQueryCommand>();
+
             var lastAccount = @event.Account.Split(":").Last();
             var lastAccountPrefix = lastAccount.Split("|").First();
             var lastAccountId = lastAccount.Split("|").Last();
 
-            return Sql.NonQueryStatementIf(lastAccountPrefix == "WL",
-                @"declare @Amount int = (select top 1 Amount FROM [OnHandInventoryView] where skuId = @SkuId and IsReserved = 0 and location = @Location)
+            if (lastAccountPrefix == "WL")
+            {
+                var command = Sql.NonQueryStatement(
+                    @"declare @Amount int = (select top 1 Amount FROM [OnHandInventoryView] where skuId = @SkuId and ReservationId IS NULL and location = @Location)
                             IF(@Amount IS NULL) 
-	                            INSERT INTO [OnHandInventoryView] ([Location],[Amount],[SkuId],[IsReserved]) VALUES (@Location, @AmountToAppend, @SkuId, 0)
+	                            INSERT INTO [OnHandInventoryView] ([Location],[Amount],[SkuId],[ReservationId]) VALUES (@Location, @AmountToAppend, @SkuId, NULL)
                             ELSE
-	                            UPDATE [OnHandInventoryView] SET [Amount] = @Amount + @AmountToAppend WHERE SkuId = @SkuId and IsReserved = 0",
-                new
-                {
-                    SkuId = Sql.UniqueIdentifier(@event.SkuId), AmountToAppend = Sql.Int(@event.Amount),
-                    Location = Sql.VarChar(lastAccountId, 50)
-                });
+	                            UPDATE [OnHandInventoryView] SET [Amount] = @Amount + @AmountToAppend WHERE SkuId = @SkuId and ReservationId IS NULL",
+                    new
+                    {
+                        SkuId = Sql.UniqueIdentifier(@event.SkuId),
+                        AmountToAppend = Sql.Int(@event.Amount),
+                        Location = Sql.VarChar(lastAccountId, 50)
+                    });
+
+                result.Add(command);
+            }
+            else if(lastAccountPrefix == "R")
+            {
+                var penUltimateAccount = @event.Account.Split(":").Reverse().Skip(1).First();
+                var penultimateAccountId = penUltimateAccount.Split("|").Last();
+
+                var command = Sql.NonQueryStatement(
+                    @"declare @AvailableAmount int = (select top 1 Amount FROM [OnHandInventoryView] where skuId = @SkuId and ReservationId IS NULL and Location = @Location)
+                           declare @Amount int = (select top 1 Amount FROM [OnHandInventoryView] where skuId = @SkuId and ReservationId = @ReservationId and Location = @Location)
+
+                            IF(@Amount IS NULL)
+							BEGIN 
+	                            INSERT INTO [OnHandInventoryView] ([Location],[Amount],[SkuId],[ReservationId]) VALUES (@Location, @ReservedAmount, @SkuId, @ReservationId)
+                                UPDATE [OnHandInventoryView] SET [Amount] = @AvailableAmount - @ReservedAmount WHERE SkuId = @SkuId and ReservationId IS NULL and Location = @Location
+							END
+                            ELSE
+							BEGIN
+	                            UPDATE [OnHandInventoryView] SET [Amount] = @Amount + @ReservedAmount WHERE SkuId = @SkuId and ReservationId = @ReservationId
+                                UPDATE [OnHandInventoryView] SET [Amount] = @AvailableAmount - @ReservedAmount WHERE SkuId = @SkuId and ReservationId IS NULL and Location = @Location
+								END",
+                    new
+                    {
+                        SkuId = Sql.UniqueIdentifier(@event.SkuId),
+                        ReservedAmount = Sql.Int(@event.Amount),
+                        Location = Sql.VarChar(penultimateAccountId, 50),
+                        ReservationId = Sql.UniqueIdentifier(Guid.Parse(lastAccountId))
+                    });
+
+                result.Add(command);
+            }
+
+            return result;
         }
     }
 }

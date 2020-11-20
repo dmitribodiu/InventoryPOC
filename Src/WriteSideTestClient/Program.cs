@@ -86,6 +86,37 @@ namespace WriteSideTestClient
                     new GeneralLedgerEntryPosted { GeneralLedgerEntryId = goodsUnloadedEntryId, PostDate = goodsUnloadedEntryPostDate }
                 };
 
+                // Goods unloaded:
+
+                var goodsReservedEntryId = Guid.NewGuid();
+                var goodsReservedEntryPostDate = DateTimeOffset.UtcNow;
+                var reservationId = Guid.Parse("7adb94c8-5cee-4f2c-abbf-6d993d2c693f");
+
+                var goodsReserved = new PostGeneralLedgerEntry
+                {
+                    CreatedOn = DateTimeOffset.UtcNow,
+                    PostDate = goodsReservedEntryPostDate,
+                    GeneralLedgerEntryId = goodsReservedEntryId,
+                    BusinessTransaction = new GoodsReservedTransaction
+                    {
+                        ReferenceNumber = 1,
+                        CustomerId = customerId,
+                        LocationId = locationId,
+                        SkuId = skuId,
+                        Amount = 10,
+                        ReservationId = reservationId
+                    }
+                };
+
+                // Should be translated into:
+                var goodsReservedEvents = new object[]
+                {
+                    new CreditApplied { Account = $"C|{customerId}:WL|{locationId}", GeneralLedgerEntryId = goodsReservedEntryId, Amount = 10, SkuId = skuId },
+                    new DebitApplied { Account = $"C|{customerId}:WL|{locationId}:R|{reservationId}", GeneralLedgerEntryId = goodsReservedEntryId, Amount = 10, SkuId = skuId },
+                    goodsReserved.BusinessTransaction.GetAdditionalChanges(),
+                    new GeneralLedgerEntryPosted { GeneralLedgerEntryId = goodsReservedEntryId, PostDate = goodsReservedEntryPostDate }
+                };
+
                 var connectionSettings = ConnectionSettings.Create()
                     .KeepReconnecting()
                     .KeepRetrying()
@@ -115,6 +146,17 @@ namespace WriteSideTestClient
                         $"ledgerEntry-{goodsUnloadedEntryId}",
                         ExpectedVersion.Any,
                         goodsUnloadedEvents.Select(@event => new EventData(
+                            Guid.NewGuid(),
+                            @event.GetType().FullName,
+                            true,
+                            Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(@event)),
+                            new byte[0])).ToArray()).GetAwaiter().GetResult();
+
+                    //GoodsReserved
+                    connection.AppendToStreamAsync(
+                        $"ledgerEntry-{goodsUnloadedEntryId}",
+                        ExpectedVersion.Any,
+                        goodsReservedEvents.Select(@event => new EventData(
                             Guid.NewGuid(),
                             @event.GetType().FullName,
                             true,
