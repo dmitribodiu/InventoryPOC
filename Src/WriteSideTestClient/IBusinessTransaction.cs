@@ -147,4 +147,30 @@ namespace WriteSideTestClient
             };
         }
     }
+
+    public class GoodsShiftedTransaction : IBusinessTransaction
+    {
+        GeneralLedgerEntryNumber IBusinessTransaction.ReferenceNumber =>
+            new GeneralLedgerEntryNumber("goodsShifted", ReferenceNumber);
+
+        public int ReferenceNumber { get; set; }
+        public Guid CustomerId { get; set; }
+        public Guid SkuId { get; set; }
+        public int Amount { get; set; }
+        public Guid LocationId { get; set; }
+        public Guid DestinationLocationId { get; set; }
+
+        public IEnumerable<object> GetAdditionalChanges()
+        {
+            yield return new GoodsShifted
+            {
+                ReferenceNumber = new GeneralLedgerEntryNumber("goodsShifted", ReferenceNumber),
+                Amount = Amount,
+                SkuId = SkuId,
+                CustomerId = CustomerId,
+                LocationId = LocationId,
+                DestinationLocationId = DestinationLocationId
+            };
+        }
+    }
 }

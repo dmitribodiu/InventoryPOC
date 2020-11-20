@@ -77,6 +77,21 @@ namespace ProjactEventStoreProjection
                 result.Add(command);
             }
 
+            if (lastAccountPrefix == "WL")
+            {
+                var command = Sql.NonQueryStatement(
+                    @"declare @Amount int = (select top 1 Amount FROM [OnHandInventoryView] where skuId = @SkuId and ReservationId IS NULL and location = @Location)
+                            UPDATE [OnHandInventoryView] SET [Amount] = @Amount - @AmountToAppend WHERE SkuId = @SkuId and ReservationId IS NULL and Location = @Location",
+                    new
+                    {
+                        SkuId = Sql.UniqueIdentifier(@event.SkuId),
+                        AmountToAppend = Sql.Int(@event.Amount),
+                        Location = Sql.VarChar(lastAccountId, 50)
+                    });
+
+                result.Add(command);
+            }
+
             return result;
         }
 
