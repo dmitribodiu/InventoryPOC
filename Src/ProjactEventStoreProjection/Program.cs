@@ -54,8 +54,6 @@ namespace ProjactEventStoreProjection
                 var a = subscription.LastProcessedEventNumber;
                 Console.ReadKey();
             }
-
-            
         }
     }
 }
