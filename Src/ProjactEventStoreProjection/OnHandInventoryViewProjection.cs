@@ -52,7 +52,32 @@ namespace ProjactEventStoreProjection
 
         private IEnumerable<SqlNonQueryCommand> CreditAppliedHandler(CreditApplied @event)
         {
-            return Sql.NonQueryStatementIf(false, "");
+            var result = new List<SqlNonQueryCommand>();
+
+            var lastAccount = @event.Account.Split(":").Last();
+            var lastAccountPrefix = lastAccount.Split("|").First();
+            var lastAccountId = lastAccount.Split("|").Last();
+
+            var penUltimateAccount = @event.Account.Split(":").Reverse().Skip(1).First();
+            var penultimateAccountId = penUltimateAccount.Split("|").Last();
+
+            if (lastAccountPrefix == "R")
+            {
+                var command = Sql.NonQueryStatement(
+                    @"declare @Amount int = (select top 1 Amount FROM [OnHandInventoryView] where skuId = @SkuId and ReservationId = @ReservationId and location = @Location)
+                            UPDATE [OnHandInventoryView] SET [Amount] = @Amount - @ReservedAmount WHERE SkuId = @SkuId and ReservationId = @ReservationId and location = @Location",
+                    new
+                    {
+                        SkuId = Sql.UniqueIdentifier(@event.SkuId),
+                        ReservedAmount = Sql.Int(@event.Amount),
+                        Location = Sql.VarChar(penultimateAccountId, 50),
+                        ReservationId = Sql.UniqueIdentifier(Guid.Parse(lastAccountId))
+                    });
+
+                result.Add(command);
+            }
+
+            return result;
         }
 
         private IEnumerable<SqlNonQueryCommand> DebitAppliedHandler(DebitApplied @event)

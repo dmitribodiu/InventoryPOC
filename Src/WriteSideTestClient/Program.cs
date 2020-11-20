@@ -86,7 +86,7 @@ namespace WriteSideTestClient
                     new GeneralLedgerEntryPosted { GeneralLedgerEntryId = goodsUnloadedEntryId, PostDate = goodsUnloadedEntryPostDate }
                 };
 
-                // Goods unloaded:
+                // Goods reserved:
 
                 var goodsReservedEntryId = Guid.NewGuid();
                 var goodsReservedEntryPostDate = DateTimeOffset.UtcNow;
@@ -115,6 +115,38 @@ namespace WriteSideTestClient
                     new DebitApplied { Account = $"C|{customerId}:WL|{locationId}:R|{reservationId}", GeneralLedgerEntryId = goodsReservedEntryId, Amount = 10, SkuId = skuId },
                     goodsReserved.BusinessTransaction.GetAdditionalChanges(),
                     new GeneralLedgerEntryPosted { GeneralLedgerEntryId = goodsReservedEntryId, PostDate = goodsReservedEntryPostDate }
+                };
+
+                // Goods loaded:
+
+                var goodsLoadedEntryId = Guid.NewGuid();
+                var goodsLoadedEntryPostDate = DateTimeOffset.UtcNow;
+                var outboundDeliveryId = Guid.Parse("cdc60e2f-77e8-4f37-b9f5-da0ff962453a");
+
+                var goodsLoaded = new PostGeneralLedgerEntry
+                {
+                    CreatedOn = DateTimeOffset.UtcNow,
+                    PostDate = goodsLoadedEntryPostDate,
+                    GeneralLedgerEntryId = goodsLoadedEntryId,
+                    BusinessTransaction = new GoodsLoadedTransaction
+                    {
+                        ReferenceNumber = 1,
+                        CustomerId = customerId,
+                        LocationId = locationId,
+                        SkuId = skuId,
+                        Amount = 10,
+                        ReservationId = reservationId,
+                        OutboundDeliveryId = outboundDeliveryId
+                    }
+                };
+
+                // Should be translated into:
+                var goodsLoadedEvents = new object[]
+                {
+                    new CreditApplied { Account = $"C|{customerId}:WL|{locationId}:R|{reservationId}", GeneralLedgerEntryId = goodsLoadedEntryId, Amount = 10, SkuId = skuId },
+                    new DebitApplied { Account = $"C|{customerId}:OD|{outboundDeliveryId}", GeneralLedgerEntryId = goodsLoadedEntryId, Amount = 10, SkuId = skuId },
+                    goodsLoaded.BusinessTransaction.GetAdditionalChanges(),
+                    new GeneralLedgerEntryPosted { GeneralLedgerEntryId = goodsLoadedEntryId, PostDate = goodsLoadedEntryPostDate }
                 };
 
                 var connectionSettings = ConnectionSettings.Create()
@@ -154,9 +186,20 @@ namespace WriteSideTestClient
 
                     //GoodsReserved
                     connection.AppendToStreamAsync(
-                        $"ledgerEntry-{goodsUnloadedEntryId}",
+                        $"ledgerEntry-{goodsReservedEntryId}",
                         ExpectedVersion.Any,
                         goodsReservedEvents.Select(@event => new EventData(
+                            Guid.NewGuid(),
+                            @event.GetType().FullName,
+                            true,
+                            Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(@event)),
+                            new byte[0])).ToArray()).GetAwaiter().GetResult();
+
+                    //GoodsLoaded
+                    connection.AppendToStreamAsync(
+                        $"ledgerEntry-{goodsLoadedEntryId}",
+                        ExpectedVersion.Any,
+                        goodsLoadedEvents.Select(@event => new EventData(
                             Guid.NewGuid(),
                             @event.GetType().FullName,
                             true,
