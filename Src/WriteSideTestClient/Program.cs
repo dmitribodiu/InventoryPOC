@@ -51,7 +51,7 @@ namespace WriteSideTestClient
                     new GeneralLedgerEntryCreated { GeneralLedgerEntryId = deliveryScheduledEntryId, Number = deliveryScheduled.BusinessTransaction.ReferenceNumber.ToString(), CreatedOn = deliveryScheduled.CreatedOn },
                     new CreditApplied { Account = $"C|{customerId}", GeneralLedgerEntryId = deliveryScheduledEntryId, Amount = 20, SkuId = skuId },
                     new DebitApplied { Account = $"C|{customerId}:ID|{inboundDeliveryId}", GeneralLedgerEntryId = deliveryScheduledEntryId, Amount = 20, SkuId = skuId },
-                    deliveryScheduled.BusinessTransaction.GetAdditionalChanges(),
+                    deliveryScheduled.BusinessTransaction.GetAdditionalChanges().Single(),
                     new GeneralLedgerEntryPosted { GeneralLedgerEntryId = deliveryScheduledEntryId, PostDate = deliveryScheduledEntryPostDate }
                 };
 
@@ -84,7 +84,7 @@ namespace WriteSideTestClient
                     new GeneralLedgerEntryCreated { GeneralLedgerEntryId = goodsUnloadedEntryId, Number = goodsUnloaded.BusinessTransaction.ReferenceNumber.ToString(), CreatedOn = goodsUnloaded.CreatedOn },
                     new CreditApplied { Account = $"C|{customerId}:ID|{inboundDeliveryId}", GeneralLedgerEntryId = goodsUnloadedEntryId, Amount = 20, SkuId = skuId },
                     new DebitApplied { Account = $"C|{customerId}:WL|{locationId}", GeneralLedgerEntryId = goodsUnloadedEntryId, Amount = 20, SkuId = skuId },
-                    goodsUnloaded.BusinessTransaction.GetAdditionalChanges(),
+                    goodsUnloaded.BusinessTransaction.GetAdditionalChanges().Single(),
                     new GeneralLedgerEntryPosted { GeneralLedgerEntryId = goodsUnloadedEntryId, PostDate = goodsUnloadedEntryPostDate }
                 };
 
@@ -116,7 +116,7 @@ namespace WriteSideTestClient
                     new GeneralLedgerEntryCreated { GeneralLedgerEntryId = goodsReservedEntryId, Number = goodsReserved.BusinessTransaction.ReferenceNumber.ToString(), CreatedOn = goodsReserved.CreatedOn },
                     new CreditApplied { Account = $"C|{customerId}:WL|{locationId}", GeneralLedgerEntryId = goodsReservedEntryId, Amount = 10, SkuId = skuId },
                     new DebitApplied { Account = $"C|{customerId}:WL|{locationId}:R|{reservationId}", GeneralLedgerEntryId = goodsReservedEntryId, Amount = 10, SkuId = skuId },
-                    goodsReserved.BusinessTransaction.GetAdditionalChanges(),
+                    goodsReserved.BusinessTransaction.GetAdditionalChanges().Single(),
                     new GeneralLedgerEntryPosted { GeneralLedgerEntryId = goodsReservedEntryId, PostDate = goodsReservedEntryPostDate }
                 };
 
@@ -148,7 +148,7 @@ namespace WriteSideTestClient
                     new GeneralLedgerEntryCreated { GeneralLedgerEntryId = goodsLoadedEntryId, Number = goodsLoaded.BusinessTransaction.ReferenceNumber.ToString(), CreatedOn = goodsLoaded.CreatedOn },
                     new CreditApplied { Account = $"C|{customerId}:WL|{locationId}:R|{reservationId}", GeneralLedgerEntryId = goodsLoadedEntryId, Amount = 10, SkuId = skuId },
                     new DebitApplied { Account = $"C|{customerId}:OD|{outboundDeliveryId}", GeneralLedgerEntryId = goodsLoadedEntryId, Amount = 10, SkuId = skuId },
-                    goodsLoaded.BusinessTransaction.GetAdditionalChanges(),
+                    goodsLoaded.BusinessTransaction.GetAdditionalChanges().Single(),
                     new GeneralLedgerEntryPosted { GeneralLedgerEntryId = goodsLoadedEntryId, PostDate = goodsLoadedEntryPostDate }
                 };
 
@@ -179,7 +179,7 @@ namespace WriteSideTestClient
                     new GeneralLedgerEntryCreated { GeneralLedgerEntryId = goodsShiftedEntryId, Number = goodsShifted.BusinessTransaction.ReferenceNumber.ToString(), CreatedOn = goodsShifted.CreatedOn },
                     new CreditApplied { Account = $"C|{customerId}:WL|{locationId}", GeneralLedgerEntryId = goodsShiftedEntryId, Amount = 10, SkuId = skuId },
                     new DebitApplied { Account = $"C|{customerId}:WL|{destinationLocationId}", GeneralLedgerEntryId = goodsShiftedEntryId, Amount = 10, SkuId = skuId },
-                    goodsShifted.BusinessTransaction.GetAdditionalChanges(),
+                    goodsShifted.BusinessTransaction.GetAdditionalChanges().Single(),
                     new GeneralLedgerEntryPosted { GeneralLedgerEntryId = goodsShiftedEntryId, PostDate = goodsShiftedEntryPostDate }
                 };
 
