@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Events.Inventory;
@@ -78,12 +79,28 @@ namespace WriteSideTestClient
                     }
                 };
 
+                // lets imagine 20 pallets are unloaded (BatchA) + one partial unit (54 bags) (BatchA) + one mixed unit (25 BatchA, 30 BatchB) + 1 variable (540 kg).
+                // They all go to the same location for now.
+
+                var cp7SkuId = Guid.NewGuid();
+                var bagSkuId = Guid.NewGuid();
+                var oneKgOfCoffeeSkuId = Guid.NewGuid();
+                var mixedPalletId = Guid.NewGuid();
                 // Should be translated into:
                 var goodsUnloadedEvents = new object[]
                 {
                     new GeneralLedgerEntryCreated { GeneralLedgerEntryId = goodsUnloadedEntryId, Number = goodsUnloaded.BusinessTransaction.ReferenceNumber.ToString(), CreatedOn = goodsUnloaded.CreatedOn },
                     new CreditApplied { Account = $"C|{customerId}:ID|{inboundDeliveryId}", GeneralLedgerEntryId = goodsUnloadedEntryId, Amount = 20, SkuId = skuId },
-                    new DebitApplied { Account = $"C|{customerId}:WL|{locationId}", GeneralLedgerEntryId = goodsUnloadedEntryId, Amount = 20, SkuId = skuId },
+                    new DebitApplied { Account = $"C|{customerId}:WL|{locationId}", GeneralLedgerEntryId = goodsUnloadedEntryId, Amount = 20, SkuId = skuId,
+                        SkuMetadata = new Dictionary<string, object>{ {"Batch", "A"}}},
+                    new DebitApplied { Account = $"C|{customerId}:WL|{locationId}:HU|{Guid.NewGuid()},{cp7SkuId}", GeneralLedgerEntryId = goodsUnloadedEntryId, Amount = 54, SkuId = bagSkuId,
+                        SkuMetadata = new Dictionary<string, object>{ {"Batch", "A"}}},
+                    new DebitApplied { Account = $"C|{customerId}:WL|{locationId}:HU|{mixedPalletId},{cp7SkuId}", GeneralLedgerEntryId = goodsUnloadedEntryId, Amount = 25, SkuId = bagSkuId,
+                        SkuMetadata = new Dictionary<string, object>{ {"Batch", "A"}}},
+                    new DebitApplied { Account = $"C|{customerId}:WL|{locationId}:HU|{mixedPalletId},{cp7SkuId}", GeneralLedgerEntryId = goodsUnloadedEntryId, Amount = 30, SkuId = bagSkuId,
+                        SkuMetadata = new Dictionary<string, object>{ {"Batch", "B"}}},
+                    new DebitApplied { Account = $"C|{customerId}:WL|{locationId}:HU|{Guid.NewGuid()},{cp7SkuId}", GeneralLedgerEntryId = goodsUnloadedEntryId, Amount = 540, SkuId = oneKgOfCoffeeSkuId,
+                        SkuMetadata = new Dictionary<string, object>{ {"Batch", "B"}}},
                     goodsUnloaded.BusinessTransaction.GetAdditionalChanges().Single(),
                     new GeneralLedgerEntryPosted { GeneralLedgerEntryId = goodsUnloadedEntryId, PostDate = goodsUnloadedEntryPostDate }
                 };

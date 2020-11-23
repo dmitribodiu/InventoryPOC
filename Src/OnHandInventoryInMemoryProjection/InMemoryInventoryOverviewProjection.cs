@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using Events;
+using Events.Account;
 using Events.Inventory;
 using Microsoft.Extensions.Caching.Memory;
 using Projac;
@@ -19,17 +20,16 @@ namespace OnHandInventoryInMemoryProjection
 
         private static void DebitAppliedOnAvailableAccount(MemoryCache cache, DebitApplied message)
         {
+            var account = Account.Parse(message.Account);
+            var accountId = account.GetId();
+            var location = account.GetComponent<WarehouseLocationComponent>();
+
             var lastAccount = message.Account.Split(":").Last();
             var lastAccountPrefix = lastAccount.Split("|").First();
-            var locationId = lastAccount.Split("|").Last();
-            var locationAsGuid = Guid.Parse(locationId);
+            var lastAccountValue = lastAccount.Split("|").Last();
+            var locationAsGuid = Guid.Parse(lastAccountValue);
 
-            if (lastAccountPrefix != "WL")
-            {
-                return;
-            }
-
-            var id = StockLinePartId.NewId(message.SkuId, locationAsGuid);
+            var id = StockLinePartId.NewId(message.SkuId, accountId, message.SkuMetadata);
 
             if (cache.TryGetValue(id, out StockLine stockLine))
             {
@@ -41,7 +41,7 @@ namespace OnHandInventoryInMemoryProjection
                     new StockLine
                     {
                         SkuId = message.SkuId,
-                        LocationId = locationAsGuid,
+                        LocationId = location.LocationId,
                         Amount = message.Amount,
                         ReservationId = null
                     });

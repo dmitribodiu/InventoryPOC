@@ -46,7 +46,7 @@ namespace OnHandInventoryInMemoryProjection
                     var collection = field.GetValue(cache) as ICollection;
                     if (collection != null)
                     {
-                        var table = new ConsoleTable("SkuId", "Amount", "LocationId", "ReservationId");
+                        var table = new ConsoleTable("SkuId", "Amount", "LocationId", "ReservationId", "UnitId");
                         foreach (var item in collection)
                         {
                             var methodInfo = item.GetType().GetProperty("Key");
@@ -72,5 +72,6 @@ namespace OnHandInventoryInMemoryProjection
         public int Amount { get; set; }
         public Guid LocationId { get; set; }
         public Guid? ReservationId { get; set; }
+        public string AccountId { get; set; }
     }
 }
