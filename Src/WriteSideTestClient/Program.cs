@@ -99,7 +99,7 @@ namespace WriteSideTestClient
                         SkuMetadata = new Dictionary<string, object>{ {"Batch", "A"}}},
                     new DebitApplied { Account = $"C|{customerId}:WL|{locationId}:HU|{mixedPalletId},{cp7SkuId}", GeneralLedgerEntryId = goodsUnloadedEntryId, Amount = 30, SkuId = bagSkuId,
                         SkuMetadata = new Dictionary<string, object>{ {"Batch", "B"}}},
-                    new DebitApplied { Account = $"C|{customerId}:WL|{locationId}:HU|{Guid.NewGuid()},{cp7SkuId}", GeneralLedgerEntryId = goodsUnloadedEntryId, Amount = 540, SkuId = oneKgOfCoffeeSkuId,
+                    new DebitApplied { Account = $"C|{customerId}:WL|{locationId}:HU|{Guid.NewGuid()},{cp7SkuId}:HU|{Guid.NewGuid()},{oneKgOfCoffeeSkuId}", GeneralLedgerEntryId = goodsUnloadedEntryId, Amount = 540, SkuId = oneKgOfCoffeeSkuId,
                         SkuMetadata = new Dictionary<string, object>{ {"Batch", "B"}}},
                     goodsUnloaded.BusinessTransaction.GetAdditionalChanges().Single(),
                     new GeneralLedgerEntryPosted { GeneralLedgerEntryId = goodsUnloadedEntryId, PostDate = goodsUnloadedEntryPostDate }
