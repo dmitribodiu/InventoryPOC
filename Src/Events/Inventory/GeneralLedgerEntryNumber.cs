@@ -34,5 +34,7 @@ namespace Events.Inventory
             Prefix = prefix;
             SequenceNumber = sequenceNumber;
         }
+
+        public override string ToString() => $"{Prefix}-{SequenceNumber}";
     }
 }

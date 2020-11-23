@@ -48,6 +48,7 @@ namespace WriteSideTestClient
                 // Should be translated into:
                 var deliveryScheduledEvents = new object[]
                 {
+                    new GeneralLedgerEntryCreated { GeneralLedgerEntryId = deliveryScheduledEntryId, Number = deliveryScheduled.BusinessTransaction.ReferenceNumber.ToString(), CreatedOn = deliveryScheduled.CreatedOn },
                     new CreditApplied { Account = $"C|{customerId}", GeneralLedgerEntryId = deliveryScheduledEntryId, Amount = 20, SkuId = skuId },
                     new DebitApplied { Account = $"C|{customerId}:ID|{inboundDeliveryId}", GeneralLedgerEntryId = deliveryScheduledEntryId, Amount = 20, SkuId = skuId },
                     deliveryScheduled.BusinessTransaction.GetAdditionalChanges(),
@@ -80,6 +81,7 @@ namespace WriteSideTestClient
                 // Should be translated into:
                 var goodsUnloadedEvents = new object[]
                 {
+                    new GeneralLedgerEntryCreated { GeneralLedgerEntryId = goodsUnloadedEntryId, Number = goodsUnloaded.BusinessTransaction.ReferenceNumber.ToString(), CreatedOn = goodsUnloaded.CreatedOn },
                     new CreditApplied { Account = $"C|{customerId}:ID|{inboundDeliveryId}", GeneralLedgerEntryId = goodsUnloadedEntryId, Amount = 20, SkuId = skuId },
                     new DebitApplied { Account = $"C|{customerId}:WL|{locationId}", GeneralLedgerEntryId = goodsUnloadedEntryId, Amount = 20, SkuId = skuId },
                     goodsUnloaded.BusinessTransaction.GetAdditionalChanges(),
@@ -111,6 +113,7 @@ namespace WriteSideTestClient
                 // Should be translated into:
                 var goodsReservedEvents = new object[]
                 {
+                    new GeneralLedgerEntryCreated { GeneralLedgerEntryId = goodsReservedEntryId, Number = goodsReserved.BusinessTransaction.ReferenceNumber.ToString(), CreatedOn = goodsReserved.CreatedOn },
                     new CreditApplied { Account = $"C|{customerId}:WL|{locationId}", GeneralLedgerEntryId = goodsReservedEntryId, Amount = 10, SkuId = skuId },
                     new DebitApplied { Account = $"C|{customerId}:WL|{locationId}:R|{reservationId}", GeneralLedgerEntryId = goodsReservedEntryId, Amount = 10, SkuId = skuId },
                     goodsReserved.BusinessTransaction.GetAdditionalChanges(),
@@ -142,6 +145,7 @@ namespace WriteSideTestClient
                 // Should be translated into:
                 var goodsLoadedEvents = new object[]
                 {
+                    new GeneralLedgerEntryCreated { GeneralLedgerEntryId = goodsLoadedEntryId, Number = goodsLoaded.BusinessTransaction.ReferenceNumber.ToString(), CreatedOn = goodsLoaded.CreatedOn },
                     new CreditApplied { Account = $"C|{customerId}:WL|{locationId}:R|{reservationId}", GeneralLedgerEntryId = goodsLoadedEntryId, Amount = 10, SkuId = skuId },
                     new DebitApplied { Account = $"C|{customerId}:OD|{outboundDeliveryId}", GeneralLedgerEntryId = goodsLoadedEntryId, Amount = 10, SkuId = skuId },
                     goodsLoaded.BusinessTransaction.GetAdditionalChanges(),
@@ -172,6 +176,7 @@ namespace WriteSideTestClient
                 // Should be translated into:
                 var goodsShiftedEvents = new object[]
                 {
+                    new GeneralLedgerEntryCreated { GeneralLedgerEntryId = goodsShiftedEntryId, Number = goodsShifted.BusinessTransaction.ReferenceNumber.ToString(), CreatedOn = goodsShifted.CreatedOn },
                     new CreditApplied { Account = $"C|{customerId}:WL|{locationId}", GeneralLedgerEntryId = goodsShiftedEntryId, Amount = 10, SkuId = skuId },
                     new DebitApplied { Account = $"C|{customerId}:WL|{destinationLocationId}", GeneralLedgerEntryId = goodsShiftedEntryId, Amount = 10, SkuId = skuId },
                     goodsShifted.BusinessTransaction.GetAdditionalChanges(),
