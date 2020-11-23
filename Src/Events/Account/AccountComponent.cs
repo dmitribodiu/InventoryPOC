@@ -144,7 +144,11 @@ namespace Events.Account
             var prefix = accountComponent.Split("|").First();
             if (Prefix == prefix)
             {
-                component = new HandlingUnitComponent { HandlingUnitId = Guid.Parse((ReadOnlySpan<char>)accountComponent.Split("|").Last()) };
+                component = new HandlingUnitComponent
+                {
+                    Id = Guid.Parse((ReadOnlySpan<char>)accountComponent.Split("|").Last().Split(",").First()),
+                    HandlingUnitId = Guid.Parse((ReadOnlySpan<char>)accountComponent.Split("|").Last().Split(",").Last())
+                };
                 return true;
             }
 

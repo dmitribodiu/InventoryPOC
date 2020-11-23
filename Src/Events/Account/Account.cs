@@ -56,9 +56,9 @@ namespace Events.Account
                 var component = (AccountComponent)Activator.CreateInstance(type);
                 foreach (var accountComponent in accountComponents)
                 {
-                    if (component.TryParse(accountComponent, out component))
+                    if (component.TryParse(accountComponent, out AccountComponent returnedComponent))
                     {
-                        objects.Add(component);
+                        objects.Add(returnedComponent);
                     }
                 }
             }
@@ -69,6 +69,18 @@ namespace Events.Account
         {
             var accountComponent = Children.Single(x => x is T);
             return accountComponent as T;
+        }
+
+        public T TryGetComponent<T>() where T : class
+        {
+            var accountComponent = Children.SingleOrDefault(x => x is T);
+            return accountComponent as T;
+        }
+
+        public bool ContainsComponent<T>()
+        {
+            var component = Children.SingleOrDefault(x => x is T);
+            return component != null;
         }
     }
 }
