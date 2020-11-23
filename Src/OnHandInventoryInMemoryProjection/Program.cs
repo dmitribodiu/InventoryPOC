@@ -54,7 +54,8 @@ namespace OnHandInventoryInMemoryProjection
                             var value = cache.Get<StockLine>(val);
                             table.AddRow(value.SkuId, value.Amount, value.LocationId, value.ReservationId);
                         }
-                        Console.Clear();
+                        //Console.Clear();
+                        Console.WriteLine($"EVENT TYPE: {@event.Event.EventType}");
                         table.Write();
                     }
 
