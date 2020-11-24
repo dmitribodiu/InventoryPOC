@@ -49,7 +49,7 @@ namespace OnHandInventoryInMemoryProjection
                         ReservationId = reservation?.ReservationId,
                         Batch = Convert.ToString(batchValue),
                         AccountId = accountId.ToString(),
-                        
+                        NetWeight = cache.Get<double>(message.SkuId) * message.Amount
                     });
             }
         }
@@ -66,6 +66,7 @@ namespace OnHandInventoryInMemoryProjection
             if (cache.TryGetValue(id, out StockLine stockLine))
             {
                 stockLine.Amount -= message.Amount;
+                stockLine.NetWeight = cache.Get<double>(message.SkuId) * stockLine.Amount;
 
                 if (stockLine.Amount == 0)
                 {

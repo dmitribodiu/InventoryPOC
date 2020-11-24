@@ -83,45 +83,35 @@ namespace WriteSideTestClient
                 // lets imagine 20 pallets are unloaded (BatchA) + one partial unit (54 bags) (BatchA) + one mixed unit (25 BatchA, 30 BatchB) + 1 variable (540 kg).
                 // They all go to the same location for now.
 
-                var oneKgOfCoffee = new Product(Guid.NewGuid(), "Coffee 'Jacobs', 1 kg");
-                var onePolyBag = new PackagingMaterial(Guid.NewGuid(), "Poly bag, Volume: 25 kg");
+                var oneKgOfCoffee = new Product(Guid.NewGuid(), "Coffee 'Jacobs', 1 kg", 1);
+                var onePolyBag = new PackagingMaterial(Guid.NewGuid(), "Poly bag, Volume: 25 kg", 0.2);
                 var oneBag = new CompositeSku(Guid.NewGuid(), "One bag of 25 kg of 'Jacobs' coffee");
                 oneBag.Add(onePolyBag, 1);
                 oneBag.Add(oneKgOfCoffee, 25);
 
-                var pallet = new PackagingMaterial(Guid.NewGuid(), "Pallet, CP7");
+                var pallet = new PackagingMaterial(Guid.NewGuid(), "Pallet, CP7", 17);
 
                 var palletWith55Bags = new CompositeSku(Guid.NewGuid(), "Pallet with 55 bags of coffee, 25 kg in each");
                 palletWith55Bags.Add(pallet, 1);
                 palletWith55Bags.Add(oneBag, 55);
 
-                // SkuId NetWeight
-                // palletWith55Bags.GetNetWeight()
-                //oneBag.GetNetWeight()
-                var sku1 = "Coffee, 1 kg";
-                var skuB = "Poly Bag";
-                var skuC = "Composite= 1 SkuB + 25 sku1";
-
-                var cp7SkuId = Guid.NewGuid();
-                var bagSkuId = Guid.NewGuid();
-                var oneKgOfCoffeeSkuId = Guid.NewGuid();
                 var mixedPalletId = Guid.NewGuid();
 
-                //25 skuId:A => 25 BAGS
                 // Should be translated into:
                 var goodsUnloadedEvents = new object[]
                 {
+                    new SkuDefined { Sku = palletWith55Bags }, 
                     new GeneralLedgerEntryCreated { GeneralLedgerEntryId = goodsUnloadedEntryId, Number = goodsUnloaded.BusinessTransaction.ReferenceNumber.ToString(), CreatedOn = goodsUnloaded.CreatedOn },
                     new CreditApplied { Account = $"C|{customerId}:ID|{inboundDeliveryId}", GeneralLedgerEntryId = goodsUnloadedEntryId, Amount = 20, SkuId = skuId },
-                    new DebitApplied { Account = $"C|{customerId}:WL|{locationId}", GeneralLedgerEntryId = goodsUnloadedEntryId, Amount = 20, SkuId = skuId,
+                    new DebitApplied { Account = $"C|{customerId}:WL|{locationId}", GeneralLedgerEntryId = goodsUnloadedEntryId, Amount = 20, SkuId = palletWith55Bags.Id,
                         SkuMetadata = new Dictionary<string, object>{ {"Batch", "A"}}},
-                    new DebitApplied { Account = $"C|{customerId}:WL|{locationId}:HU|{Guid.NewGuid()},{cp7SkuId}", GeneralLedgerEntryId = goodsUnloadedEntryId, Amount = 54, SkuId = bagSkuId,
+                    new DebitApplied { Account = $"C|{customerId}:WL|{locationId}:HU|{Guid.NewGuid()},{pallet.Id}", GeneralLedgerEntryId = goodsUnloadedEntryId, Amount = 54, SkuId = oneBag.Id,
                         SkuMetadata = new Dictionary<string, object>{ {"Batch", "A"}}},
-                    new DebitApplied { Account = $"C|{customerId}:WL|{locationId}:HU|{mixedPalletId},{cp7SkuId}", GeneralLedgerEntryId = goodsUnloadedEntryId, Amount = 25, SkuId = bagSkuId,
+                    new DebitApplied { Account = $"C|{customerId}:WL|{locationId}:HU|{mixedPalletId},{pallet.Id}", GeneralLedgerEntryId = goodsUnloadedEntryId, Amount = 25, SkuId = oneBag.Id,
                         SkuMetadata = new Dictionary<string, object>{ {"Batch", "A"}}},
-                    new DebitApplied { Account = $"C|{customerId}:WL|{locationId}:HU|{mixedPalletId},{cp7SkuId}", GeneralLedgerEntryId = goodsUnloadedEntryId, Amount = 30, SkuId = bagSkuId,
+                    new DebitApplied { Account = $"C|{customerId}:WL|{locationId}:HU|{mixedPalletId},{pallet.Id}", GeneralLedgerEntryId = goodsUnloadedEntryId, Amount = 30, SkuId = oneBag.Id,
                         SkuMetadata = new Dictionary<string, object>{ {"Batch", "B"}}},
-                    new DebitApplied { Account = $"C|{customerId}:WL|{locationId}:HU|{Guid.NewGuid()},{cp7SkuId}:HU|{Guid.NewGuid()},{oneKgOfCoffeeSkuId}", GeneralLedgerEntryId = goodsUnloadedEntryId, Amount = 540, SkuId = oneKgOfCoffeeSkuId,
+                    new DebitApplied { Account = $"C|{customerId}:WL|{locationId}:HU|{Guid.NewGuid()},{pallet.Id}:HU|{Guid.NewGuid()},{oneBag.Id}", GeneralLedgerEntryId = goodsUnloadedEntryId, Amount = 540, SkuId = oneKgOfCoffee.Id,
                         SkuMetadata = new Dictionary<string, object>{ {"Batch", "B"}}},
                     goodsUnloaded.BusinessTransaction.GetAdditionalChanges().Single(),
                     new GeneralLedgerEntryPosted { GeneralLedgerEntryId = goodsUnloadedEntryId, PostDate = goodsUnloadedEntryPostDate }

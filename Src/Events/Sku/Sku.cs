@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
+using System.Linq;
 
 namespace Events.Sku
 {
@@ -14,42 +14,37 @@ namespace Events.Sku
             Id = id;
             Description = description;
         }
-        public abstract double GetWeight();
 
         public abstract double GetNetWeight();
     }
 
     public class Product : Sku
     {
-        public Product(Guid id, string description) : base(id, description)
-        {
-        }
+        public double NetWeight { get; }
 
-        public override double GetWeight()
+        public Product(Guid id, string description, double netWeight) : base(id, description)
         {
-            return 2;
+            NetWeight = netWeight;
         }
 
         public override double GetNetWeight()
         {
-            throw new NotImplementedException();
+            return NetWeight;
         }
     }
 
     public class PackagingMaterial : Sku
     {
-        public PackagingMaterial(Guid id, string description) : base(id, description)
-        {
-        }
+        public double NetWeight { get; }
 
-        public override double GetWeight()
+        public PackagingMaterial(Guid id, string description, double netWeight) : base(id, description)
         {
-            return 2;
+            NetWeight = netWeight;
         }
 
         public override double GetNetWeight()
         {
-            throw new NotImplementedException();
+            return NetWeight;
         }
     }
 
@@ -71,24 +66,13 @@ namespace Events.Sku
             _skuBom.Remove(sku);
         }
 
-        public override double GetWeight()
-        {
-            double total = 0;
-            
-            foreach (var keyValuePair in _skuBom)
-            {
-                total += keyValuePair.Key.GetWeight() * keyValuePair.Value;
-            }
-            return total;
-        }
-
         public override double GetNetWeight()
         {
             double total = 0;
 
-            foreach (var keyValuePair in _skuBom)
+            foreach (var keyValuePair in _skuBom.Where(x=>!(x.Key is PackagingMaterial)))
             {
-                total += keyValuePair.Key.GetWeight() * keyValuePair.Value;
+                total += keyValuePair.Key.GetNetWeight() * keyValuePair.Value;
             }
             return total;
         }
