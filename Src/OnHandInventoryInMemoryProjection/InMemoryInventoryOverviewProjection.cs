@@ -10,9 +10,15 @@ namespace OnHandInventoryInMemoryProjection
     {
         public static AnonymousProjection<MemoryCache> Projection =
             new AnonymousProjectionBuilder<MemoryCache>().
+                When<SkuDefined>((Action<MemoryCache, SkuDefined>) SkuDefined).
                 When<DebitApplied>((Action<MemoryCache, DebitApplied>) DebitApplied).
                 When<CreditApplied>((Action<MemoryCache, CreditApplied>)CreditApplied).
                 Build();
+
+        private static void SkuDefined(MemoryCache cache, SkuDefined skuDefined)
+        {
+            cache.Set(skuDefined.Sku.Id, skuDefined.Sku.GetNetWeight());
+        }
 
         private static void DebitApplied(MemoryCache cache, DebitApplied message)
         {
@@ -41,7 +47,9 @@ namespace OnHandInventoryInMemoryProjection
                         Amount = message.Amount,
                         LocationId = location.LocationId,
                         ReservationId = reservation?.ReservationId,
-                        Batch = Convert.ToString(batchValue)
+                        Batch = Convert.ToString(batchValue),
+                        AccountId = accountId.ToString(),
+                        
                     });
             }
         }

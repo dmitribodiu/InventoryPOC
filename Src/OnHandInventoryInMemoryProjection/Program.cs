@@ -46,13 +46,13 @@ namespace OnHandInventoryInMemoryProjection
                     var collection = field.GetValue(cache) as ICollection;
                     if (collection != null)
                     {
-                        var table = new ConsoleTable("SkuId", "Amount", "LocationId", "ReservationId, Batch");
+                        var table = new ConsoleTable("SkuId", "Amount", "LocationId", "ReservationId", "NetWeight", "Batch");
                         foreach (var item in collection)
                         {
                             var methodInfo = item.GetType().GetProperty("Key");
                             var val = methodInfo.GetValue(item);
                             var value = cache.Get<StockLine>(val);
-                            table.AddRow(value.SkuId, value.Amount, value.LocationId, value.ReservationId, value.Batch);
+                            table.AddRow(value.SkuId, value.Amount, value.LocationId, value.ReservationId, value.NetWeight, value.Batch);
                         }
                         //Console.Clear();
                         Console.WriteLine($"EVENT TYPE: {@event.Event.EventType}");
@@ -74,5 +74,6 @@ namespace OnHandInventoryInMemoryProjection
         public Guid? ReservationId { get; set; }
         public string AccountId { get; set; }
         public string Batch { get; set; }
+        public double NetWeight { get; set; }
     }
 }

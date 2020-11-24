@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Events.Inventory;
+using Events.Sku;
 using EventStore.ClientAPI;
 using Newtonsoft.Json;
 
@@ -82,10 +83,31 @@ namespace WriteSideTestClient
                 // lets imagine 20 pallets are unloaded (BatchA) + one partial unit (54 bags) (BatchA) + one mixed unit (25 BatchA, 30 BatchB) + 1 variable (540 kg).
                 // They all go to the same location for now.
 
+                var oneKgOfCoffee = new Product(Guid.NewGuid(), "Coffee 'Jacobs', 1 kg");
+                var onePolyBag = new PackagingMaterial(Guid.NewGuid(), "Poly bag, Volume: 25 kg");
+                var oneBag = new CompositeSku(Guid.NewGuid(), "One bag of 25 kg of 'Jacobs' coffee");
+                oneBag.Add(onePolyBag, 1);
+                oneBag.Add(oneKgOfCoffee, 25);
+
+                var pallet = new PackagingMaterial(Guid.NewGuid(), "Pallet, CP7");
+
+                var palletWith55Bags = new CompositeSku(Guid.NewGuid(), "Pallet with 55 bags of coffee, 25 kg in each");
+                palletWith55Bags.Add(pallet, 1);
+                palletWith55Bags.Add(oneBag, 55);
+
+                // SkuId NetWeight
+                // palletWith55Bags.GetNetWeight()
+                //oneBag.GetNetWeight()
+                var sku1 = "Coffee, 1 kg";
+                var skuB = "Poly Bag";
+                var skuC = "Composite= 1 SkuB + 25 sku1";
+
                 var cp7SkuId = Guid.NewGuid();
                 var bagSkuId = Guid.NewGuid();
                 var oneKgOfCoffeeSkuId = Guid.NewGuid();
                 var mixedPalletId = Guid.NewGuid();
+
+                //25 skuId:A => 25 BAGS
                 // Should be translated into:
                 var goodsUnloadedEvents = new object[]
                 {
