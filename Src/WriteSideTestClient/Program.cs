@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Events;
 using Events.Inventory;
 using Events.Sku;
 using EventStore.ClientAPI;
@@ -100,7 +101,9 @@ namespace WriteSideTestClient
                 // Should be translated into:
                 var goodsUnloadedEvents = new object[]
                 {
-                    new SkuDefined { Sku = palletWith55Bags }, 
+                    new SkuDefined { Sku = oneKgOfCoffee },
+                    new SkuDefined { Sku = oneBag },
+                    new SkuDefined { Sku = palletWith55Bags },
                     new GeneralLedgerEntryCreated { GeneralLedgerEntryId = goodsUnloadedEntryId, Number = goodsUnloaded.BusinessTransaction.ReferenceNumber.ToString(), CreatedOn = goodsUnloaded.CreatedOn },
                     new CreditApplied { Account = $"C|{customerId}:ID|{inboundDeliveryId}", GeneralLedgerEntryId = goodsUnloadedEntryId, Amount = 20, SkuId = skuId },
                     new DebitApplied { Account = $"C|{customerId}:WL|{locationId}", GeneralLedgerEntryId = goodsUnloadedEntryId, Amount = 20, SkuId = palletWith55Bags.Id,
@@ -221,6 +224,13 @@ namespace WriteSideTestClient
                     .SetHeartbeatInterval(TimeSpan.FromSeconds(10))
                     .SetHeartbeatTimeout(TimeSpan.FromSeconds(20));
 
+                var jsonSerializerSettings = new JsonSerializerSettings
+                {
+                    TypeNameHandling = TypeNameHandling.All,
+                    NullValueHandling = NullValueHandling.Ignore,
+                    ContractResolver = new DictionaryAsArrayResolver()
+                };
+
                 using (var connection = EventStoreConnection.Create("ConnectTo=tcp://admin:changeit@127.0.0.1:1113; HeartBeatTimeout=5000", connectionSettings))
                 {
                     connection.ConnectAsync().GetAwaiter().GetResult();
@@ -233,7 +243,7 @@ namespace WriteSideTestClient
                             Guid.NewGuid(),
                             @event.GetType().FullName,
                             true,
-                            Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(@event)),
+                            Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(@event, jsonSerializerSettings)),
                             new byte[0])).ToArray()).GetAwaiter().GetResult();
 
                     //GoodsUnloaded
@@ -244,7 +254,7 @@ namespace WriteSideTestClient
                             Guid.NewGuid(),
                             @event.GetType().FullName,
                             true,
-                            Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(@event)),
+                            Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(@event, jsonSerializerSettings)),
                             new byte[0])).ToArray()).GetAwaiter().GetResult();
 
                     //GoodsReserved
@@ -255,7 +265,7 @@ namespace WriteSideTestClient
                             Guid.NewGuid(),
                             @event.GetType().FullName,
                             true,
-                            Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(@event)),
+                            Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(@event, jsonSerializerSettings)),
                             new byte[0])).ToArray()).GetAwaiter().GetResult();
 
                     //GoodsLoaded
@@ -266,7 +276,7 @@ namespace WriteSideTestClient
                             Guid.NewGuid(),
                             @event.GetType().FullName,
                             true,
-                            Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(@event)),
+                            Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(@event, jsonSerializerSettings)),
                             new byte[0])).ToArray()).GetAwaiter().GetResult();
 
                     //GoodsShifted
@@ -277,7 +287,7 @@ namespace WriteSideTestClient
                             Guid.NewGuid(),
                             @event.GetType().FullName,
                             true,
-                            Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(@event)),
+                            Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(@event, jsonSerializerSettings)),
                             new byte[0])).ToArray()).GetAwaiter().GetResult();
                 }
             }

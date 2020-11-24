@@ -36,11 +36,19 @@ namespace OnHandInventoryInMemoryProjection
 
                 var subscription = connection.SubscribeToStreamFrom("$ce-ledgerEntry", StreamPosition.Start, CatchUpSubscriptionSettings.Default, (_, @event) =>
                 {
+                    var deserializedEvent = JsonConvert.DeserializeObject(
+                        Encoding.UTF8.GetString(@event.Event.Data),
+                        Assembly.GetAssembly(typeof(PortfolioRenamed)).GetType(@event.Event.EventType),
+                        new JsonSerializerSettings
+                        {
+                            TypeNameHandling = TypeNameHandling.All,
+                            NullValueHandling = NullValueHandling.Ignore,
+                            ContractResolver = new DictionaryAsArrayResolver()
+                });
+
                     new Projector<MemoryCache>(
                             Resolve.WhenEqualToHandlerMessageType(InMemoryInventoryOverviewProjection.Projection.Handlers)).
-                        ProjectAsync(cache, JsonConvert.DeserializeObject(
-                            Encoding.UTF8.GetString(@event.Event.Data),
-                            Assembly.GetAssembly(typeof(PortfolioRenamed)).GetType(@event.Event.EventType)));
+                        ProjectAsync(cache, deserializedEvent);
 
                     var field = typeof(MemoryCache).GetProperty("EntriesCollection", BindingFlags.NonPublic | BindingFlags.Instance);
                     var collection = field.GetValue(cache) as ICollection;
@@ -51,8 +59,12 @@ namespace OnHandInventoryInMemoryProjection
                         {
                             var methodInfo = item.GetType().GetProperty("Key");
                             var val = methodInfo.GetValue(item);
-                            var value = cache.Get<StockLine>(val);
-                            table.AddRow(value.SkuId, value.Amount, value.LocationId, value.ReservationId, value.NetWeight, value.Batch);
+                            var value = cache.Get(val);
+                            if (value is StockLine)
+                            {
+                                var stockLine = (StockLine) value;
+                                table.AddRow(stockLine.SkuId, stockLine.Amount, stockLine.LocationId, stockLine.ReservationId, stockLine.NetWeight, stockLine.Batch);
+                            }
                         }
                         //Console.Clear();
                         Console.WriteLine($"EVENT TYPE: {@event.Event.EventType}");
