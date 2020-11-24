@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Linq;
-using Events;
 using Events.Account;
 using Events.Inventory;
 using Microsoft.Extensions.Caching.Memory;
@@ -28,6 +26,8 @@ namespace OnHandInventoryInMemoryProjection
 
             var id = StockLinePartId.NewId(message.SkuId, accountId, message.SkuMetadata);
 
+            message.SkuMetadata.TryGetValue("Batch", out var batchValue);
+
             if (cache.TryGetValue(id, out StockLine stockLine))
             {
                 stockLine.Amount += message.Amount;
@@ -40,7 +40,8 @@ namespace OnHandInventoryInMemoryProjection
                         SkuId = message.SkuId,
                         Amount = message.Amount,
                         LocationId = location.LocationId,
-                        ReservationId = reservation?.ReservationId
+                        ReservationId = reservation?.ReservationId,
+                        Batch = Convert.ToString(batchValue)
                     });
             }
         }
