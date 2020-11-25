@@ -50,30 +50,35 @@ namespace OnHandInventoryInMemoryProjection
                             Resolve.WhenEqualToHandlerMessageType(InMemoryInventoryOverviewProjection.Projection.Handlers)).
                         ProjectAsync(cache, deserializedEvent);
 
-                    var field = typeof(MemoryCache).GetProperty("EntriesCollection", BindingFlags.NonPublic | BindingFlags.Instance);
-                    var collection = field.GetValue(cache) as ICollection;
-                    if (collection != null)
-                    {
-                        var table = new ConsoleTable("SkuId", "Amount", "LocationId", "ReservationId", "NetWeight", "Batch");
-                        foreach (var item in collection)
-                        {
-                            var methodInfo = item.GetType().GetProperty("Key");
-                            var val = methodInfo.GetValue(item);
-                            var value = cache.Get(val);
-                            if (value is StockLine)
-                            {
-                                var stockLine = (StockLine) value;
-                                table.AddRow(stockLine.SkuId, stockLine.Amount, stockLine.LocationId, stockLine.ReservationId, stockLine.NetWeight, stockLine.Batch);
-                            }
-                        }
-                        //Console.Clear();
-                        Console.WriteLine($"EVENT TYPE: {@event.Event.EventType}");
-                        table.Write();
-                    }
+                    Console.WriteLine($"EVENT TYPE: {@event.Event.EventType}");
+                    OutputCache(cache);
 
                 }, userCredentials: credentials);
 
                 Console.ReadKey();
+            }
+        }
+
+        static void OutputCache(MemoryCache cache)
+        {
+            var field = typeof(MemoryCache).GetProperty("EntriesCollection", BindingFlags.NonPublic | BindingFlags.Instance);
+            var collection = field.GetValue(cache) as ICollection;
+            if (collection != null)
+            {
+                var table = new ConsoleTable("SkuId", "Amount", "LocationId", "ReservationId", "NetWeight", "Batch");
+                foreach (var item in collection)
+                {
+                    var methodInfo = item.GetType().GetProperty("Key");
+                    var val = methodInfo.GetValue(item);
+                    var value = cache.Get(val);
+                    if (value is StockLine)
+                    {
+                        var stockLine = (StockLine)value;
+                        table.AddRow(stockLine.SkuId, stockLine.Amount, stockLine.LocationId, stockLine.ReservationId, stockLine.NetWeight, stockLine.Batch);
+                    }
+                }
+                //Console.Clear();
+                table.Write();
             }
         }
     }
