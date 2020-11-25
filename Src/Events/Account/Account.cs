@@ -41,7 +41,8 @@ namespace Events.Account
 
         public override string ToString()
         {
-            return String.Join(":", Children.Select(x=>x.ToString()));
+            var lastAccount = Children.Last();
+            return $"{lastAccount.GetPrefix()}|{lastAccount.GetId()}";
         }
 
         private static List<AccountComponent> GetAccountComponent(string accountAsString)

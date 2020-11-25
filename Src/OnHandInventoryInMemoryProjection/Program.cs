@@ -65,7 +65,7 @@ namespace OnHandInventoryInMemoryProjection
             var collection = field.GetValue(cache) as ICollection;
             if (collection != null)
             {
-                var table = new ConsoleTable("SkuId", "Amount", "LocationId", "ReservationId", "NetWeight", "Batch");
+                var table = new ConsoleTable("SkuId", "Amount", "LocationId", "ReservationId", "NetWeight", "Batch", "Account");
                 foreach (var item in collection)
                 {
                     var methodInfo = item.GetType().GetProperty("Key");
@@ -74,7 +74,7 @@ namespace OnHandInventoryInMemoryProjection
                     if (value is StockLine)
                     {
                         var stockLine = (StockLine)value;
-                        table.AddRow(stockLine.SkuId, stockLine.Amount, stockLine.LocationId, stockLine.ReservationId, stockLine.NetWeight, stockLine.Batch);
+                        table.AddRow(stockLine.SkuId, stockLine.Amount, stockLine.LocationId, stockLine.ReservationId, stockLine.NetWeight, stockLine.Batch, stockLine.Account);
                     }
                 }
                 //Console.Clear();
@@ -92,5 +92,6 @@ namespace OnHandInventoryInMemoryProjection
         public string AccountId { get; set; }
         public string Batch { get; set; }
         public double NetWeight { get; set; }
+        public string Account { get; set; }
     }
 }

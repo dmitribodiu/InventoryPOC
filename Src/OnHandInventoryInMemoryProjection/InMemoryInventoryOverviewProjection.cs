@@ -49,7 +49,8 @@ namespace OnHandInventoryInMemoryProjection
                         ReservationId = reservation?.ReservationId,
                         Batch = Convert.ToString(batchValue),
                         AccountId = accountId.ToString(),
-                        NetWeight = cache.Get<double>(message.SkuId) * message.Amount
+                        NetWeight = cache.Get<double>(message.SkuId) * message.Amount,
+                        Account = account.ToString()
                     });
             }
         }

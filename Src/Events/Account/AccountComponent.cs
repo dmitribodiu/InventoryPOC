@@ -5,6 +5,7 @@ namespace Events.Account
 {
     public abstract class AccountComponent
     {
+        public abstract string GetPrefix();
         public abstract Guid GetId();
 
         public abstract bool TryParse(string accountComponent, out AccountComponent component);
@@ -14,6 +15,11 @@ namespace Events.Account
     {
         public Guid CustomerId { get; set; }
         public const string Prefix = "C";
+
+        public override string GetPrefix()
+        {
+            return Prefix;
+        }
 
         public override Guid GetId()
         {
@@ -40,6 +46,11 @@ namespace Events.Account
     {
         public Guid InboundDeliveryId { get; set; }
         public const string Prefix = "ID";
+
+        public override string GetPrefix()
+        {
+            return Prefix;
+        }
         public override Guid GetId()
         {
             return InboundDeliveryId;
@@ -63,6 +74,11 @@ namespace Events.Account
     {
         public Guid LocationId { get; set; }
         public const string Prefix = "WL";
+
+        public override string GetPrefix()
+        {
+            return Prefix;
+        }
         public override Guid GetId()
         {
             return LocationId;
@@ -86,6 +102,11 @@ namespace Events.Account
     {
         public Guid ReservationId { get; set; }
         public const string Prefix = "R";
+
+        public override string GetPrefix()
+        {
+            return Prefix;
+        }
         public override Guid GetId()
         {
             return ReservationId;
@@ -109,6 +130,11 @@ namespace Events.Account
     {
         public Guid OutboundDeliveryId { get; set; }
         public const string Prefix = "OD";
+
+        public override string GetPrefix()
+        {
+            return Prefix;
+        }
         public override Guid GetId()
         {
             return OutboundDeliveryId;
@@ -133,6 +159,11 @@ namespace Events.Account
         public Guid HandlingUnitId { get; set; }
 
         public const string Prefix = "HU";
+
+        public override string GetPrefix()
+        {
+            return Prefix;
+        }
         public override Guid GetId()
         {
             return Id;
