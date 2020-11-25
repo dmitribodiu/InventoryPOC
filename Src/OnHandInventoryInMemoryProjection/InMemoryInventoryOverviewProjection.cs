@@ -1,6 +1,7 @@
 ﻿using System;
 using Events.Account;
 using Events.Inventory;
+using Events.Sku;
 using Microsoft.Extensions.Caching.Memory;
 using Projac;
 
@@ -17,7 +18,7 @@ namespace OnHandInventoryInMemoryProjection
 
         private static void SkuDefined(MemoryCache cache, SkuDefined skuDefined)
         {
-            cache.Set(skuDefined.Sku.Id, skuDefined.Sku.GetNetWeight());
+            cache.Set(skuDefined.Sku.Id, skuDefined.Sku);
         }
 
         private static void DebitApplied(MemoryCache cache, DebitApplied message)
@@ -49,8 +50,9 @@ namespace OnHandInventoryInMemoryProjection
                         ReservationId = reservation?.ReservationId,
                         Batch = Convert.ToString(batchValue),
                         AccountId = accountId.ToString(),
-                        NetWeight = cache.Get<double>(message.SkuId) * message.Amount,
-                        Account = account.ToString()
+                        NetWeight = cache.Get<Sku>(message.SkuId).GetNetWeight() * message.Amount,
+                        Account = account.ToString(),
+                        SkuDescription = cache.Get<Sku>(message.SkuId).Description
                     });
             }
         }
@@ -67,7 +69,7 @@ namespace OnHandInventoryInMemoryProjection
             if (cache.TryGetValue(id, out StockLine stockLine))
             {
                 stockLine.Amount -= message.Amount;
-                stockLine.NetWeight = cache.Get<double>(message.SkuId) * stockLine.Amount;
+                stockLine.NetWeight = cache.Get<Sku>(message.SkuId).GetNetWeight() * stockLine.Amount;
 
                 if (stockLine.Amount == 0)
                 {
