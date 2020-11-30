@@ -9,7 +9,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WriteSideTestClient", "Writ
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Events", "Events\Events.csproj", "{D4E3A32F-EFCB-47BB-8FC1-785776B961A3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OnHandInventoryInMemoryProjection", "OnHandInventoryInMemoryProjection\OnHandInventoryInMemoryProjection.csproj", "{7D90F814-FEE4-4D5C-8251-5061F083CD95}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OnHandInventoryInMemoryProjection", "OnHandInventoryInMemoryProjection\OnHandInventoryInMemoryProjection.csproj", "{7D90F814-FEE4-4D5C-8251-5061F083CD95}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Goods", "Goods\Goods.csproj", "{1986C06D-E627-4A1C-87DB-C1CA3B6E9FF7}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -33,6 +35,10 @@ Global
 		{7D90F814-FEE4-4D5C-8251-5061F083CD95}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7D90F814-FEE4-4D5C-8251-5061F083CD95}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7D90F814-FEE4-4D5C-8251-5061F083CD95}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1986C06D-E627-4A1C-87DB-C1CA3B6E9FF7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1986C06D-E627-4A1C-87DB-C1CA3B6E9FF7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1986C06D-E627-4A1C-87DB-C1CA3B6E9FF7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1986C06D-E627-4A1C-87DB-C1CA3B6E9FF7}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
