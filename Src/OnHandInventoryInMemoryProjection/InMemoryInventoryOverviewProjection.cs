@@ -1,7 +1,7 @@
 ﻿using System;
-using System.Linq;
-using Events;
+using Events.Account;
 using Events.Inventory;
+using Events.Sku;
 using Microsoft.Extensions.Caching.Memory;
 using Projac;
 
@@ -11,25 +11,29 @@ namespace OnHandInventoryInMemoryProjection
     {
         public static AnonymousProjection<MemoryCache> Projection =
             new AnonymousProjectionBuilder<MemoryCache>().
-                When<DebitApplied>((Action<MemoryCache, DebitApplied>) DebitAppliedOnAvailableAccount).
-                When<DebitApplied>((Action<MemoryCache, DebitApplied>)DebitAppliedOnReservedAccount).
-                When<CreditApplied>((Action<MemoryCache, CreditApplied>)CreditAppliedOnAvailableAccount).
-                When<CreditApplied>((Action<MemoryCache, CreditApplied>)CreditAppliedOnReservedAccount).
+                When<SkuDefined>((Action<MemoryCache, SkuDefined>) SkuDefined).
+                When<DebitApplied>((Action<MemoryCache, DebitApplied>) DebitApplied).
+                When<CreditApplied>((Action<MemoryCache, CreditApplied>)CreditApplied).
                 Build();
 
-        private static void DebitAppliedOnAvailableAccount(MemoryCache cache, DebitApplied message)
+        private static void SkuDefined(MemoryCache cache, SkuDefined skuDefined)
         {
-            var lastAccount = message.Account.Split(":").Last();
-            var lastAccountPrefix = lastAccount.Split("|").First();
-            var locationId = lastAccount.Split("|").Last();
-            var locationAsGuid = Guid.Parse(locationId);
+            cache.Set(skuDefined.Sku.Id, skuDefined.Sku);
+        }
 
-            if (lastAccountPrefix != "WL")
-            {
-                return;
-            }
+        private static void DebitApplied(MemoryCache cache, DebitApplied message)
+        {
+            var account = Account.Parse(message.Account);
 
-            var id = StockLinePartId.NewId(message.SkuId, locationAsGuid);
+            if (!account.ContainsComponent<WarehouseLocationComponent>()) return;
+            
+            var accountId = account.GetId();
+            var location = account.GetComponent<WarehouseLocationComponent>();
+            var reservation = account.TryGetComponent<ReservationComponent>();
+
+            var id = StockLinePartId.NewId(message.SkuId, accountId, message.SkuMetadata);
+
+            message.SkuMetadata.TryGetValue("Batch", out var batchValue);
 
             if (cache.TryGetValue(id, out StockLine stockLine))
             {
@@ -41,94 +45,31 @@ namespace OnHandInventoryInMemoryProjection
                     new StockLine
                     {
                         SkuId = message.SkuId,
-                        LocationId = locationAsGuid,
                         Amount = message.Amount,
-                        ReservationId = null
+                        LocationId = location.LocationId,
+                        ReservationId = reservation?.ReservationId,
+                        Batch = Convert.ToString(batchValue),
+                        AccountId = accountId.ToString(),
+                        NetWeight = cache.Get<Sku>(message.SkuId).GetNetWeight() * message.Amount,
+                        Account = account.ToString(),
+                        SkuDescription = cache.Get<Sku>(message.SkuId).Description
                     });
             }
         }
 
-        private static void DebitAppliedOnReservedAccount(MemoryCache cache, DebitApplied message)
+        private static void CreditApplied(MemoryCache cache, CreditApplied message)
         {
-            var lastAccount = message.Account.Split(":").Last();
-            var lastAccountPrefix = lastAccount.Split("|").First();
-            var reservationId = lastAccount.Split("|").Last();
-            var reservationAsGuid = Guid.Parse(reservationId);
+            var account = Account.Parse(message.Account);
+            if (!account.ContainsComponent<WarehouseLocationComponent>()) return;
 
-            if (lastAccountPrefix != "R")
-            {
-                return;
-            }
+            var accountId = account.GetId();
 
-            var penUltimateAccount = message.Account.Split(":").Reverse().Skip(1).First();
-            var locationId = penUltimateAccount.Split("|").Last();
-            var locationIdAsGuid = Guid.Parse(locationId);
-
-            var id = StockLinePartId.NewId(message.SkuId, locationIdAsGuid, reservationAsGuid);
-
-            if (cache.TryGetValue(id, out StockLine stockLine))
-            {
-                stockLine.Amount += message.Amount;
-            }
-            else
-            {
-                cache.Set(id,
-                    new StockLine
-                    {
-                        SkuId = message.SkuId,
-                        LocationId = locationIdAsGuid,
-                        Amount = message.Amount,
-                        ReservationId = reservationAsGuid
-                    });
-            }
-        }
-
-        private static void CreditAppliedOnAvailableAccount(MemoryCache cache, CreditApplied message)
-        {
-            var lastAccount = message.Account.Split(":").Last();
-            var lastAccountPrefix = lastAccount.Split("|").First();
-            var locationId = lastAccount.Split("|").Last();
-            var locationAsGuid = Guid.Parse(locationId);
-
-            if (lastAccountPrefix != "WL")
-            {
-                return;
-            }
-
-            var id = StockLinePartId.NewId(message.SkuId, locationAsGuid);
+            var id = StockLinePartId.NewId(message.SkuId, accountId, message.SkuMetadata);
 
             if (cache.TryGetValue(id, out StockLine stockLine))
             {
                 stockLine.Amount -= message.Amount;
-
-                if (stockLine.Amount == 0)
-                {
-                    cache.Remove(id);
-                }
-            }
-        }
-
-        private static void CreditAppliedOnReservedAccount(MemoryCache cache, CreditApplied message)
-        {
-            var lastAccount = message.Account.Split(":").Last();
-            var lastAccountPrefix = lastAccount.Split("|").First();
-            var reservationId = lastAccount.Split("|").Last();
-            var reservationAsGuid = Guid.Parse(reservationId);
-
-            if (lastAccountPrefix != "R")
-            {
-                return;
-            }
-
-            var penUltimateAccount = message.Account.Split(":").Reverse().Skip(1).First();
-            var locationId = penUltimateAccount.Split("|").Last();
-            var locationIdAsGuid = Guid.Parse(locationId);
-
-            var id = StockLinePartId.NewId(message.SkuId, locationIdAsGuid, reservationAsGuid);
-
-            if (cache.TryGetValue(id, out StockLine stockLine))
-            {
-                stockLine.Amount -= message.Amount;
+                stockLine.NetWeight = cache.Get<Sku>(message.SkuId).GetNetWeight() * stockLine.Amount;
 
                 if (stockLine.Amount == 0)
                 {

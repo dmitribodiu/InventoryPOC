@@ -36,32 +36,49 @@ namespace OnHandInventoryInMemoryProjection
 
                 var subscription = connection.SubscribeToStreamFrom("$ce-ledgerEntry", StreamPosition.Start, CatchUpSubscriptionSettings.Default, (_, @event) =>
                 {
+                    var deserializedEvent = JsonConvert.DeserializeObject(
+                        Encoding.UTF8.GetString(@event.Event.Data),
+                        Assembly.GetAssembly(typeof(PortfolioRenamed)).GetType(@event.Event.EventType),
+                        new JsonSerializerSettings
+                        {
+                            TypeNameHandling = TypeNameHandling.All,
+                            NullValueHandling = NullValueHandling.Ignore,
+                            ContractResolver = new DictionaryAsArrayResolver()
+                });
+
                     new Projector<MemoryCache>(
                             Resolve.WhenEqualToHandlerMessageType(InMemoryInventoryOverviewProjection.Projection.Handlers)).
-                        ProjectAsync(cache, JsonConvert.DeserializeObject(
-                            Encoding.UTF8.GetString(@event.Event.Data),
-                            Assembly.GetAssembly(typeof(PortfolioRenamed)).GetType(@event.Event.EventType)));
+                        ProjectAsync(cache, deserializedEvent);
 
-                    var field = typeof(MemoryCache).GetProperty("EntriesCollection", BindingFlags.NonPublic | BindingFlags.Instance);
-                    var collection = field.GetValue(cache) as ICollection;
-                    if (collection != null)
-                    {
-                        var table = new ConsoleTable("SkuId", "Amount", "LocationId", "ReservationId");
-                        foreach (var item in collection)
-                        {
-                            var methodInfo = item.GetType().GetProperty("Key");
-                            var val = methodInfo.GetValue(item);
-                            var value = cache.Get<StockLine>(val);
-                            table.AddRow(value.SkuId, value.Amount, value.LocationId, value.ReservationId);
-                        }
-                        //Console.Clear();
-                        Console.WriteLine($"EVENT TYPE: {@event.Event.EventType}");
-                        table.Write();
-                    }
+                    Console.WriteLine($"EVENT TYPE: {@event.Event.EventType}");
+                    OutputCache(cache);
 
                 }, userCredentials: credentials);
 
                 Console.ReadKey();
+            }
+        }
+
+        static void OutputCache(MemoryCache cache)
+        {
+            var field = typeof(MemoryCache).GetProperty("EntriesCollection", BindingFlags.NonPublic | BindingFlags.Instance);
+            var collection = field.GetValue(cache) as ICollection;
+            if (collection != null)
+            {
+                var table = new ConsoleTable("SkuId", "Amount", "LocationId", "ReservationId", "NetWeight", "Batch", "Account", "SkuDescription");
+                foreach (var item in collection)
+                {
+                    var methodInfo = item.GetType().GetProperty("Key");
+                    var val = methodInfo.GetValue(item);
+                    var value = cache.Get(val);
+                    if (value is StockLine)
+                    {
+                        var stockLine = (StockLine)value;
+                        table.AddRow(stockLine.SkuId, stockLine.Amount, stockLine.LocationId, stockLine.ReservationId, stockLine.NetWeight, stockLine.Batch, stockLine.Account, stockLine.SkuDescription);
+                    }
+                }
+                //Console.Clear();
+                table.Write();
             }
         }
     }
@@ -72,5 +89,10 @@ namespace OnHandInventoryInMemoryProjection
         public int Amount { get; set; }
         public Guid LocationId { get; set; }
         public Guid? ReservationId { get; set; }
+        public string AccountId { get; set; }
+        public string Batch { get; set; }
+        public double NetWeight { get; set; }
+        public string Account { get; set; }
+        public string SkuDescription { get; set; }
     }
 }

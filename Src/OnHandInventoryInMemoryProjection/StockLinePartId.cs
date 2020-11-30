@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -6,9 +8,13 @@ namespace OnHandInventoryInMemoryProjection
 {
     public class StockLinePartId 
     {
-        public static Guid NewId(Guid skuId, Guid locationId, Guid? reservationId = null)
+        public static Guid NewId(Guid skuId, Guid accountId, Dictionary<string, object> skuAttributes)
         {
-            var id = $"{skuId}-{locationId}-{reservationId}";
+            var skuAttributesCaseIgnored = skuAttributes
+                .OrderBy(x => x.Key)
+                .Select(x => x.Key + "=" + x.Value).ToList();
+
+            var id = $"{skuId}-{accountId}-{string.Join(";", skuAttributesCaseIgnored)}";
             return id.ToGuid();
         }
     }
