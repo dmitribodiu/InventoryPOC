@@ -34,20 +34,21 @@ namespace Goods
         public PackedGoodsSpecification PackedGoodsSpecification { get; set; }
         public BundledGoodsSpecification BundledGoodsSpecification { get; set; }
         public PieceGoodsSpecification PieceGoodsSpecification { get; set; }
-
     }
 
-
-
-    public class BundledGoodsSpecification
+    public class PackagedProductProperties
     {
+        public string Batch { get; set; }
+        public string SerialNumber { get; set; }
     }
 
-    public class PackedGoodsSpecification
+    public class TransportHandlingUnitProperties
     {
+        public PalletTransportHandlingUnitProperties PalletProperties { get; set; }
     }
 
-    public class BulkGoodsSpecification
+    public class PalletTransportHandlingUnitProperties
     {
+        public string PalletNumber { get; set; }
     }
 }
