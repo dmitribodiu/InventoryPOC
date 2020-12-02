@@ -45,6 +45,12 @@ namespace Goods
     public class TransportHandlingUnitProperties
     {
         public PalletTransportHandlingUnitProperties PalletProperties { get; set; }
+        public BagTransportHandlingUnitProperties BagProperties { get; set; }
+    }
+
+    public class BagTransportHandlingUnitProperties
+    {
+        public string BagNumber { get; set; }
     }
 
     public class PalletTransportHandlingUnitProperties
