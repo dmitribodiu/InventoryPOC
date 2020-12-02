@@ -40,12 +40,12 @@ namespace NewSchemaExamples
                 BasedOnArticle = new Article { Configuration = "55bags-25kg-cp7", Product = coffee },
                 TransportUnit = new TransportHandlingUnit
                 {
-                    Material = "CP7",
+                    Material = "BAG",
                     Properties = new TransportHandlingUnitProperties
                     {
-                        PalletProperties = new PalletTransportHandlingUnitProperties
+                        BagProperties = new BagTransportHandlingUnitProperties
                         {
-                            PalletNumber = "NONE"
+                            BagNumber = "123"
                         }
                     },
                     Contents = new PackedGoodsContent
