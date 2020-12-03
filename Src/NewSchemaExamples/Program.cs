@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using Goods;
 
 namespace NewSchemaExamples
@@ -21,7 +22,7 @@ namespace NewSchemaExamples
                     {
                         PalletNumber = "NONE"
                     } },
-                    Contents = new PackedGoodsContent
+                    Contents = new List<PackedGoodsContent>{new  PackedGoodsContent
                     {
                         PackagedProduct = new PackagedProduct
                         {
@@ -31,34 +32,7 @@ namespace NewSchemaExamples
                             Product = coffee,
                             NetWeight = "25kg"
                         }
-                    }
-                }
-            };
-
-            var oneBagExample = new PackedGoodsSpecification
-            {
-                BasedOnArticle = new Article { Configuration = "55bags-25kg-cp7", Product = coffee },
-                TransportUnit = new TransportHandlingUnit
-                {
-                    Material = "BAG",
-                    Properties = new TransportHandlingUnitProperties
-                    {
-                        BagProperties = new BagTransportHandlingUnitProperties
-                        {
-                            BagNumber = "123"
-                        }
-                    },
-                    Contents = new PackedGoodsContent
-                    {
-                        PackagedProduct = new PackagedProduct
-                        {
-                            PackagingMaterial = "25kg bag",
-                            Quantity = 55,
-                            Properties = new PackagedProductProperties { Batch = "A", SerialNumber = "NONE" },
-                            Product = coffee,
-                            NetWeight = "25kg"
-                        }
-                    }
+                    }}
                 }
             };
         }

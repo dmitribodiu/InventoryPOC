@@ -1,4 +1,6 @@
-﻿namespace Goods
+﻿using System.Collections.Generic;
+
+namespace Goods
 {
     public class PackedGoodsSpecification
     {
@@ -11,6 +13,6 @@
     {
         public string Material { get; set; }
         public TransportHandlingUnitProperties Properties { get; set; }
-        public PackedGoodsContent Contents { get; set; }
+        public List<PackedGoodsContent> Contents { get; set; } = new List<PackedGoodsContent>();
     }
 }
